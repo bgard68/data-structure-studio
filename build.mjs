@@ -3,7 +3,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const src = f => readFileSync(join(root, 'src', f), 'utf8');
+// normalize to LF so the build is byte-reproducible regardless of editor line endings
+const src = f => readFileSync(join(root, 'src', f), 'utf8').replace(/\r\n/g, '\n');
 
 const js = ['core.js', 'structs-linear.js', 'structs-linear2.js', 'structs-hash.js', 'structs-tree.js', 'structs-rb.js', 'app.js']
   .map(src).join('\n');

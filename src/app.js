@@ -196,7 +196,7 @@ function init() {
   $('#logbtn').addEventListener('click', () => document.body.classList.toggle('logopen'));
   $('#logx').addEventListener('click', () => document.body.classList.remove('logopen'));
   $('#val').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !player.busy) {
+    if (e.key === 'Enter' && !player.busy && !window.__exp) {
       const first = active.opDefs().find(o => o.grp === 'add');
       if (first) runOp(first);
     }
