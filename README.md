@@ -1,5 +1,7 @@
 # Data Structure Studio
 
+[![tests](https://github.com/bgard68/data-structure-studio/actions/workflows/test.yml/badge.svg)](https://github.com/bgard68/data-structure-studio/actions/workflows/test.yml)
+
 A one-screen, animated data-structure lab for students. Every operation animates **exactly** what the algorithm does — pointer by pointer, link by link — with a live step counter tied to Big-O.
 
 **▶ Try it: [bgard68.github.io/data-structure-studio](https://bgard68.github.io/data-structure-studio/)**
@@ -122,6 +124,8 @@ Experiments that make Big-O click — each one is in the **⚗ Try this…** men
 ## Why the animation can't lie
 
 The data-structure classes mutate **real pointer structures** (`node.next`, `node.prev`, parent/left/right) while recording animation steps. Every frame renders from an authoritative snapshot of the actual model, edges are redrawn each frame from live node positions, and every operation ends with a forced final sync frame. The step counter was audited to match the executed pointer writes exactly.
+
+And it's machine-checked: `test/run.js` loads the same classes the page runs and fuzzes them against mirror models — ~24,000 assertions covering list order and tail integrity after every random operation, ring closure in both directions, hash bucket placement, BST ordering, AVL balance factors and stored heights, and all three red-black invariants after every insert and delete. CI runs the suite on every push (`node test/run.js` locally) and also verifies the committed build output is byte-identical to a fresh build.
 
 ## Conventions
 
