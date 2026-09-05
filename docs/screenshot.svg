@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" width="1000" height="560" font-family="Segoe UI, system-ui, sans-serif">
+<style>
+  .mk-std{fill:#41547e} .mk-fresh{fill:#2fe6a0} .mk-dying{fill:#ff4d6d}
+  .node circle{fill:#131b2e; stroke:#41547e; stroke-width:1.5}
+  .node text{fill:#dde6ff; font:600 16px Cascadia Code, Consolas, monospace; text-anchor:middle; dominant-baseline:central}
+  .node .tag{font:600 10px Cascadia Code, Consolas, monospace; fill:#8093bb}
+  .edge{stroke:#41547e; stroke-width:1.6; fill:none}
+  .ptr text{font:700 11.5px Cascadia Code, Consolas, monospace; text-anchor:middle; fill:#a78bfa}
+  .ptr line{stroke:#a78bfa; stroke-width:1.6}
+  .brand{fill:#2dd6ff; font-weight:700; font-size:15px; letter-spacing:.16em}
+  .sub{fill:#8093bb; font-size:12px}
+  .tab{fill:#8093bb; font-size:12.5px; font-weight:600}
+  .tabon{fill:#2dd6ff; font-size:12.5px; font-weight:600}
+  .glabel{font-size:10px; font-weight:800; letter-spacing:.14em}
+  .btn{fill:#dde6ff; font-size:13px; font-weight:600}
+  .msg{fill:#dde6ff; font-size:13.5px}
+  .count{fill:#ffb020; font:700 13.5px Cascadia Code, Consolas, monospace}
+  .chip{fill:#8093bb; font:600 11.5px Cascadia Code, Consolas, monospace}
+  .chipv{fill:#2dd6ff}
+  .logh{fill:#8093bb; font:700 10.5px sans-serif; letter-spacing:.12em}
+  .lstep{fill:#ffb020; font:700 11px Cascadia Code, Consolas, monospace; text-anchor:end}
+  .ltext{fill:#dde6ff; font-size:12px}
+  .lcode{fill:#2dd6ff; font:600 11px Cascadia Code, Consolas, monospace}
+  .ldone{fill:#2dd6ff; font-size:12px; font-weight:650}
+</style>
+<rect width="1000" height="560" fill="#0a0e17"/>
+
+<!-- header -->
+<rect width="1000" height="40" fill="#101624"/>
+<line x1="0" y1="40" x2="1000" y2="40" stroke="#1f2a44"/>
+<text x="16" y="26" class="brand">DATA STRUCTURE STUDIO</text>
+<text x="243" y="26" class="sub">watch the links move</text>
+<text x="392" y="26" class="tab">Linked List</text>
+<text x="472" y="26" class="tab">Stack · LIFO</text>
+<text x="558" y="26" class="tab">Hash Table</text>
+<text x="640" y="26" class="tab">BST</text>
+<text x="676" y="26" class="tabon">AVL Tree</text>
+<line x1="672" y1="39" x2="738" y2="39" stroke="#2dd6ff" stroke-width="2"/>
+<text x="750" y="26" class="tab">Red-Black</text>
+
+<!-- control deck -->
+<rect y="41" width="1000" height="44" fill="#101624"/>
+<line x1="0" y1="85" x2="1000" y2="85" stroke="#1f2a44"/>
+<text x="16" y="68" class="sub">Value</text>
+<rect x="56" y="52" width="62" height="24" rx="5" fill="#0a0e17" stroke="#1f2a44"/>
+<text x="66" y="68" fill="#dde6ff" font-family="Cascadia Code, Consolas, monospace" font-size="13" font-weight="600">25</text>
+<rect x="132" y="50" width="106" height="28" rx="7" fill="#182238" stroke="#1f2a44"/>
+<text x="142" y="68" class="glabel" fill="#2fe6a0">ADD</text>
+<text x="180" y="68" class="btn">+ Insert</text>
+<rect x="246" y="50" width="118" height="28" rx="7" fill="#182238" stroke="#1f2a44"/>
+<text x="256" y="68" class="glabel" fill="#ff4d6d">DELETE</text>
+<text x="310" y="68" class="btn">Value</text>
+<text x="356" y="68" class="btn">All</text>
+<rect x="372" y="50" width="112" height="28" rx="7" fill="#182238" stroke="#1f2a44"/>
+<text x="382" y="68" class="glabel" fill="#a78bfa">MORE</text>
+<text x="425" y="68" class="btn">Search</text>
+<rect x="720" y="50" width="128" height="28" rx="5" fill="#182238" stroke="#1f2a44"/>
+<text x="732" y="68" fill="#2dd6ff" font-size="12" font-weight="600">⚗ Try this…</text>
+<text x="862" y="68" class="sub">Speed</text>
+<rect x="906" y="62" width="78" height="4" rx="2" fill="#1f2a44"/>
+<circle cx="945" cy="64" r="7" fill="#2dd6ff"/>
+
+<!-- stage: the app's real rendered AVL tree -->
+<g transform="translate(40,120) scale(1.42)">
+  <g transform="translate(86,102)">
+<defs><marker id="arrstd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="mk-std"></path></marker></defs><g></g><g><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M41.13212433497556 99.06351950373991 L12.867875665024439 140.9364804962601"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M66.86787566502444 99.06351950373991 L95.13212433497556 140.9364804962601"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M143.51818455307085 13.690233664391965 L72.48181544692915 66.30976633560803"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M174.86787566502443 19.063519503739908 L203.13212433497557 60.93648049626009"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M228.86787566502443 99.06351950373991 L257.1321243349756 140.9364804962601"></path></g><g><g class="node" transform="translate(0,160)" opacity="1.000"><circle r="21"></circle><text>10</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(54,80)" opacity="1.000"><circle r="21"></circle><text>20</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(162,0)" opacity="1.000"><circle r="21"></circle><text>30</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(216,80)" opacity="1.000"><circle r="21"></circle><text>40</text><text class="tag" text-anchor="middle" y="36">bf +1</text></g><g class="node" transform="translate(270,160)" opacity="1.000"><circle r="21"></circle><text>50</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(108,160)" opacity="1.000"><circle r="21"></circle><text>25</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g></g><g><g class="ptr pbadge" opacity="1.000"><line x1="162" y1="-24" x2="162" y2="-32"></line><text x="162" y="-38">root</text></g></g>
+  </g>
+</g>
+
+<!-- operation log -->
+<rect x="700" y="98" width="284" height="392" rx="6" fill="#101624" stroke="#1f2a44"/>
+<line x1="700" y1="126" x2="984" y2="126" stroke="#1f2a44"/>
+<text x="712" y="117" class="logh">OPERATION LOG</text>
+<text x="731" y="150" class="lstep">3</text>
+<text x="741" y="150" class="ltext">25 &lt; 30 → go left</text>
+<text x="731" y="176" class="lstep">5</text>
+<text x="741" y="176" class="ltext">25 &gt; 20 → go right</text>
+<text x="731" y="202" class="lstep">6</text>
+<text x="741" y="202" class="ltext">Attach 25 as right child</text>
+<text x="741" y="220" class="ltext">of 20</text>
+<text x="731" y="246" class="lstep">7</text>
+<text x="741" y="246" class="ltext">Heights updated on the</text>
+<text x="741" y="264" class="ltext">way back up</text>
+<line x1="712" y1="284" x2="972" y2="284" stroke="#1f2a44" stroke-dasharray="3 3"/>
+<text x="731" y="304" class="lstep">7</text>
+<text x="741" y="304" class="ldone">Insert — 7 steps · O(log n)</text>
+<text x="741" y="322" class="ldone">· n = 6, height = 2 edges</text>
+
+<!-- status bar -->
+<rect y="524" width="1000" height="36" fill="#101624"/>
+<line x1="0" y1="524" x2="1000" y2="524" stroke="#1f2a44"/>
+<text x="16" y="546" class="msg">Insert — 7 steps · O(log n) · n = 6, height = 2 edges</text>
+<text x="290" y="546" class="count" text-anchor="end">steps: 7</text>
+<rect x="300" y="530" width="348" height="24" rx="4" fill="#182238" stroke="#1f2a44"/><text x="311" y="546" class="chip">search / insert / delete <tspan class="chipv">O(log n) — h is 2 for n = 6</tspan></text><rect x="656.4000000000001" y="530" width="163" height="24" rx="4" fill="#182238" stroke="#1f2a44"/><text x="667.4000000000001" y="546" class="chip">ideal <tspan class="chipv">⌈log₂(n+1)⌉−1 = 2</tspan></text><rect x="827.2" y="530" width="137" height="24" rx="4" fill="#182238" stroke="#1f2a44"/><text x="838.2" y="546" class="chip">rotations <tspan class="chipv">O(1) each</tspan></text>
+</svg>

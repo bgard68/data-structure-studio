@@ -6,6 +6,8 @@ A one-screen, animated data-structure lab for students. Every operation animates
 
 **▶ Try it: [bgard68.github.io/Data-Structure-Studio](https://bgard68.github.io/Data-Structure-Studio/)**
 
+[![Data Structure Studio — an AVL tree after inserting 25, with the operation log and live Big-O chips](docs/screenshot.svg)](https://bgard68.github.io/Data-Structure-Studio/)
+
 Built following the [W3Schools DSA tutorial](https://www.w3schools.com/dsa/dsa_intro.php) conventions.
 
 ---
