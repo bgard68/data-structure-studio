@@ -13,9 +13,12 @@ const body = src('head.html') + '\n<script>\n' + js + '\n</script>\n';
 // artifact format: no doctype/html/head/body wrappers
 writeFileSync(join(root, 'app.html'), body);
 
-// local preview: full document
+// local preview: full document, with the title moved into <head> where it belongs
+const titleMatch = body.match(/<title>.*?<\/title>/);
+const title = titleMatch ? titleMatch[0] : '<title>Data Structure Studio</title>';
 writeFileSync(join(root, 'preview.html'),
-  '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n</head>\n<body>\n' +
-  body + '\n</body>\n</html>\n');
+  '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+  title + '\n</head>\n<body>\n' +
+  body.replace(/<title>.*?<\/title>\n?/, '') + '\n</body>\n</html>\n');
 
 console.log('built app.html + preview.html');
