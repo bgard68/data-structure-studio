@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" font-family="Segoe UI, system-ui, sans-serif">
+<style>
+  .mk-std{fill:#41547e}
+  .node circle{fill:#131b2e; stroke:#41547e; stroke-width:1.5}
+  .node text{fill:#dde6ff; font:600 16px Consolas, monospace; text-anchor:middle; dominant-baseline:central}
+  .node .tag{font:600 10px Consolas, monospace; fill:#8093bb}
+  .edge{stroke:#41547e; stroke-width:1.8; fill:none}
+  .ptr text{font:700 11.5px Consolas, monospace; text-anchor:middle; fill:#a78bfa}
+  .ptr line{stroke:#a78bfa; stroke-width:1.6}
+</style>
+<defs>
+  <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#0d2a3a" stop-opacity="0.85"/>
+    <stop offset="55%" stop-color="#0a0e17" stop-opacity="0"/>
+  </linearGradient>
+</defs>
+
+<rect width="1280" height="640" fill="#0a0e17"/>
+<rect width="1280" height="640" fill="url(#glow)"/>
+
+<!-- left: identity -->
+<text x="80" y="196" fill="#2dd6ff" font-size="27" font-weight="700" letter-spacing="7">DATA STRUCTURE</text>
+<text x="80" y="248" fill="#2dd6ff" font-size="27" font-weight="700" letter-spacing="7">STUDIO</text>
+<rect x="80" y="278" width="88" height="3" fill="#2fe6a0"/>
+
+<text x="80" y="336" fill="#dde6ff" font-size="31" font-weight="600">Watch the algorithm run —</text>
+<text x="80" y="378" fill="#dde6ff" font-size="31" font-weight="600">pointer by pointer.</text>
+
+<text x="80" y="432" fill="#8093bb" font-size="19">10 structures · live step counts vs Big-O</text>
+<text x="80" y="462" fill="#8093bb" font-size="19">Linked lists · hash tables · AVL · red-black</text>
+
+<rect x="80" y="498" width="406" height="42" rx="6" fill="#182238" stroke="#1f2a44"/>
+<text x="100" y="525" fill="#2fe6a0" font-size="16" font-family="Consolas, monospace" font-weight="600">bgard68.github.io/Data-Structure-Studio</text>
+
+<!-- right: the app's real AVL render -->
+<rect x="648" y="70" width="560" height="500" rx="10" fill="#101624" stroke="#1f2a44"/>
+<line x1="648" y1="112" x2="1208" y2="112" stroke="#1f2a44"/>
+<circle cx="672" cy="91" r="5" fill="#ff4d6d"/>
+<circle cx="690" cy="91" r="5" fill="#ffb020"/>
+<circle cx="708" cy="91" r="5" fill="#2fe6a0"/>
+<text x="736" y="96" fill="#8093bb" font-size="12.5" font-weight="600">AVL Tree</text>
+<g transform="translate(700,190) scale(1.28)">
+  <g transform="translate(0,0)">
+<defs><marker id="arrstd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="mk-std"></path></marker></defs><g></g><g><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M41.13212433497556 99.06351950373991 L12.867875665024439 140.9364804962601"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M66.86787566502444 99.06351950373991 L95.13212433497556 140.9364804962601"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M143.51818455307085 13.690233664391965 L72.48181544692915 66.30976633560803"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M174.86787566502443 19.063519503739908 L203.13212433497557 60.93648049626009"></path><path class="edge" marker-end="url(#arrstd)" opacity="1.000" d="M228.86787566502443 99.06351950373991 L257.1321243349756 140.9364804962601"></path></g><g><g class="node" transform="translate(0,160)" opacity="1.000"><circle r="21"></circle><text>10</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(54,80)" opacity="1.000"><circle r="21"></circle><text>20</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(162,0)" opacity="1.000"><circle r="21"></circle><text>30</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(216,80)" opacity="1.000"><circle r="21"></circle><text>40</text><text class="tag" text-anchor="middle" y="36">bf +1</text></g><g class="node" transform="translate(270,160)" opacity="1.000"><circle r="21"></circle><text>50</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g><g class="node" transform="translate(108,160)" opacity="1.000"><circle r="21"></circle><text>25</text><text class="tag" text-anchor="middle" y="36">bf 0</text></g></g><g><g class="ptr pbadge" opacity="1.000"><line x1="162" y1="-24" x2="162" y2="-32"></line><text x="162" y="-38">root</text></g></g>
+  </g>
+</g>
+<rect x="672" y="500" width="512" height="46" rx="6" fill="#0a0e17" stroke="#1f2a44"/>
+<text x="692" y="522" fill="#dde6ff" font-size="14">Insert — 7 steps · O(log n)</text>
+<text x="692" y="540" fill="#8093bb" font-size="12.5" font-family="Consolas, monospace">h is 2 for n = 6 · ideal = 2</text>
+<text x="1164" y="530" fill="#ffb020" font-size="15" font-weight="700" font-family="Consolas, monospace" text-anchor="end">steps: 7</text>
+</svg>
