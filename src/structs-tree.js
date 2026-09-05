@@ -252,7 +252,7 @@ class AVL extends BST {
         const s = this.minNode(nd.r);
         this.fx.hit.add(s.id); R.note(`Successor: <b>${esc(s.v)}</b>`); this.snapFx(R);
         nd.v = s.v;
-        nd.r = this.delRec(R, nd.r, s.v, { quiet: true });
+        nd.r = this.delRec(R, nd.r, s.v, {});
       } else {
         const child = nd.l || nd.r;
         this.fx.doom.add(nd.id);

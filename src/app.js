@@ -10,7 +10,8 @@ const instances = new Map();
 let active = null, renderer, player;
 
 function setOpsEnabled(on) {
-  document.querySelectorAll('#ops button, #tabs button, #finish').forEach(b => {
+  if (window.__exp) on = false;   // guided experiment in progress: controls stay locked
+  document.querySelectorAll('#ops button, #tabs button, #finish, #tryit').forEach(b => {
     if (b.id === 'finish') { b.disabled = on; return; }   // finish only enabled while playing
     b.disabled = !on || b.dataset.hardOff === '1';
   });
@@ -101,6 +102,83 @@ function selectTab(key) {
   $('#count').textContent = 'steps: 0';
 }
 
+/* ---------------- Guided experiments (⚗ Try this) ---------------- */
+const EXPERIMENTS = {
+  tails: async x => {
+    await x.banner('Deleting the TAIL — same operation, two list designs. Watch the step counter.');
+    await x.op('sll', 'clear');
+    for (const v of ['A', 'B', 'C', 'D', 'E', 'F']) await x.op('sll', 'addTail', v);
+    await x.banner('Singly list: no back-links, so it must WALK to the node before tail…');
+    const c1 = await x.op('sll', 'delTail');
+    await x.banner(`Singly list: <b>${c1} steps</b>. Now the exact same delete on a doubly list…`);
+    await x.op('dll', 'clear');
+    for (const v of ['A', 'B', 'C', 'D', 'E', 'F']) await x.op('dll', 'addTail', v);
+    const c2 = await x.op('dll', 'delTail');
+    await x.banner(`Singly: ${c1} steps · Doubly: <b>${c2} steps</b> — the prev pointer is what the extra memory bought`);
+  },
+  trees: async x => {
+    await x.banner('Insert 1–7 IN ORDER into a plain BST — watch it degenerate into a chain');
+    await x.op('bst', 'clear');
+    for (const v of ['1', '2', '3', '4', '5', '6', '7']) await x.op('bst', 'ins', v);
+    const c1 = await x.op('bst', 'search', '7');
+    await x.banner(`BST search for 7: <b>${c1} steps</b> — one per level of the chain. Same values into the AVL…`);
+    await x.op('avl', 'clear');
+    for (const v of ['1', '2', '3', '4', '5', '6', '7']) await x.op('avl', 'ins', v);
+    const c2 = await x.op('avl', 'search', '7');
+    await x.banner(`BST: ${c1} steps · AVL: <b>${c2} steps</b> — same data, same operation. The SHAPE is the difference`);
+  },
+  dist: async x => {
+    await x.banner('Insert At — inside O(n), the cost is the walk, not the list size');
+    await x.op('sll', 'clear');
+    for (const v of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']) await x.op('sll', 'addTail', v);
+    const c1 = await x.op('sll', 'insertAt', 'X', 1);
+    await x.banner(`Insert at index 1: <b>${c1} steps</b>. Same insert, further along…`);
+    const c2 = await x.op('sll', 'insertAt', 'Y', 6);
+    await x.banner(`Index 1: ${c1} steps · index 6: <b>${c2} steps</b> — distance is everything`);
+  },
+  hash: async x => {
+    await x.banner('A(65), I(73) and Q(81) all hash to bucket 1 — mod 8 wipes the difference. Collisions ahead');
+    await x.op('hash', 'clear');
+    await x.op('hash', 'ins', 'A');
+    await x.op('hash', 'ins', 'I');
+    await x.op('hash', 'ins', 'Q');
+    const c = await x.op('hash', 'search', 'Q');
+    await x.banner(`Search Q: <b>${c} steps</b> — one hash, then walking the collision chain. O(1) average still has a worst case`);
+  },
+};
+
+async function runExperiment(key) {
+  if (window.__exp || player.busy || !EXPERIMENTS[key]) return;
+  window.__exp = true;
+  setOpsEnabled(false);
+  const idle = () => new Promise(r => { const t = setInterval(() => { if (!player.busy) { clearInterval(t); r(); } }, 30); });
+  const x = {
+    banner: async text => {
+      $('#msg').innerHTML = '<b>⚗ ' + text + '</b>';
+      player.logEntry('⚗', text, true);
+      await player.delay(1800);
+    },
+    op: async (tabKey, opId, v, i) => {
+      await idle();
+      window.__exp = false; selectTab(tabKey); window.__exp = true;   // selectTab is guarded only by player.busy
+      setOpsEnabled(false);
+      const d = active.opDefs().find(o => o.id === opId);
+      if (v !== undefined) $('#val').value = v;
+      if (i !== undefined) $('#idx').value = i;
+      runOp(d);
+      await idle();
+      return parseInt($('#count').textContent.replace(/\D/g, ''), 10) || 0;
+    },
+  };
+  try { await EXPERIMENTS[key](x); }
+  catch (err) { console.error(err); }
+  finally {
+    window.__exp = false;
+    $('#tryit').value = '';
+    setOpsEnabled(true);
+  }
+}
+
 function init() {
   renderer = new Renderer($('#svg'));
   player = new Player(renderer);
@@ -113,6 +191,7 @@ function init() {
   }
   $('#finish').addEventListener('click', () => { player.skip = true; });
   $('#finish').disabled = true;
+  $('#tryit').addEventListener('change', e => { if (e.target.value) runExperiment(e.target.value); });
   if (window.innerWidth >= 1100) document.body.classList.add('logopen');
   $('#logbtn').addEventListener('click', () => document.body.classList.toggle('logopen'));
   $('#logx').addEventListener('click', () => document.body.classList.remove('logopen'));

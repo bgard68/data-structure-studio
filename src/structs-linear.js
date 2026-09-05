@@ -129,11 +129,29 @@ class SinglyList extends Struct {
   }
   delValue(R, v) {
     if (!this.head) { R.note('List is empty.'); return; }
-    let i = 0, c = this.head;
+    // one pass: keep a prev pointer while searching, unlink where we stand
+    let i = 0, c = this.head, p = null;
     while (c) {
       R.cur(c.id); R.tick();
-      if (cmp(c.v, v) === 0) { R.note(`Found <b>${esc(v)}</b> at index ${i}`); return this.delAt(R, i); }
-      c = c.next; i++;
+      if (cmp(c.v, v) === 0) {
+        R.note(`Found <b>${esc(v)}</b> at index ${i} — <b>prev</b> is already known, unlink in place`);
+        this.fx.doom.add(c.id);
+        if (p) this.fx.dying.add(p.id + '>' + c.id);
+        if (c.next) this.fx.dying.add(c.id + '>' + c.next.id);
+        this.snapFx(R);
+        if (!p) { this.head = c.next; R.note(`It was the head <code>head = head.next</code>`); }
+        else {
+          p.next = c.next;
+          if (c.next) { this.fx.fresh.add(p.id + '>' + c.next.id); R.note(`Bypass it <code>prev.next = cur.next</code>`); }
+          else R.note(`It was the tail <code>prev.next = null</code>`);
+        }
+        if (this.tail === c) this.tail = p;
+        if (!this.head) this.tail = null;
+        this.n--;
+        R.tick(); this.snapFx(R);
+        R.done('Delete value', 'O(n)'); return;
+      }
+      p = c; c = c.next; i++;
     }
     R.note(`<b>${esc(v)}</b> not found after ${R.count} steps.`); R.done('Delete value', 'O(n)');
   }
@@ -295,6 +313,30 @@ class DoublyList extends SinglyList {
     this.n--;
     R.tick(2); this.snapFx(R);
     R.done(`Delete at ${i}`, 'O(n)');
+  }
+  delValue(R, v) {
+    if (!this.head) { R.note('List is empty.'); return; }
+    let i = 0, c = this.head;
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (cmp(c.v, v) === 0) {
+        R.note(`Found <b>${esc(v)}</b> at index ${i} — unlink in both directions, right here`);
+        this.fx.doom.add(c.id);
+        if (c.prev) { this.fx.dying.add(c.prev.id + '>' + c.id); this.fx.dying.add(c.id + '>' + c.prev.id); }
+        if (c.next) { this.fx.dying.add(c.id + '>' + c.next.id); this.fx.dying.add(c.next.id + '>' + c.id); }
+        this.snapFx(R);
+        if (c.prev) c.prev.next = c.next; else this.head = c.next;
+        if (c.next) c.next.prev = c.prev; else this.tail = c.prev;
+        if (c.prev && c.next) {
+          this.fx.fresh.add(c.prev.id + '>' + c.next.id); this.fx.fresh.add(c.next.id + '>' + c.prev.id);
+        }
+        this.n--;
+        R.tick(2); R.note(`<code>prev.next = cur.next; next.prev = cur.prev</code>`); this.snapFx(R);
+        R.done('Delete value', 'O(n)'); return;
+      }
+      c = c.next; i++;
+    }
+    R.note(`<b>${esc(v)}</b> not found after ${R.count} steps.`); R.done('Delete value', 'O(n)');
   }
   generate(R) {
     this.head = this.tail = null; this.n = 0; this.staged = null;

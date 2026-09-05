@@ -36,6 +36,8 @@ Buttons change per structure — a stack shows `Push`/`Pop`, a queue shows `Enqu
 
 **While it animates:** the amber **cur** badge is the traversal pointer; **green links** are being wired; **red dashed links** are being cut; violet badges track `head`/`tail`/`front`/`rear`/`top`/`root`. The **Operation Log** panel (☰ Log) narrates every pointer write in code form — `new.next = head`, `rear.next = front` — with a running step number. Use the **Speed** slider or **⏭ Finish** to control playback.
 
+**New to Big-O?** Open the **⚗ Try this…** menu — it auto-runs four guided experiments (listed in the [O(n) section](#understanding-the-on-counter) below) and reports the step-count comparison when each finishes.
+
 ---
 
 ## The structures
@@ -98,7 +100,7 @@ The other classic self-balancer, following the standard CLRS algorithm (this one
 Big-O describes how work grows with input size *n*. The studio doesn't just label operations — the **steps counter** counts the real work as it happens: **one tick per pointer hop, comparison, or link write**. Every finished operation reports both: `Insert at 5 — 8 steps · O(n) · n = 9`.
 📖 [W3Schools: Time Complexity](https://www.w3schools.com/dsa/dsa_timecomplexity_theory.php)
 
-Experiments that make Big-O click:
+Experiments that make Big-O click — each one is in the **⚗ Try this…** menu, which runs it for you and reports the comparison:
 
 - **O(1) vs O(n), same operation:** delete the tail of a singly list (counter ≈ n) then a doubly list (counter = 2). The `prev` pointer is what you bought with the extra memory.
 - **Distance matters inside O(n):** `Insert at 1` vs `Insert at 5` on the same list — the counter grows with the walk, not the list.

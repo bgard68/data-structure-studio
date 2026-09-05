@@ -16,9 +16,12 @@ function randToken() {
 }
 const COLL = new Intl.Collator(undefined, { numeric: true, sensitivity: 'variant' });
 function cmp(a, b) {
-  // single collation = guaranteed total order ("2" < "10" still holds via numeric:true)
-  const c = COLL.compare(String(a), String(b));
-  return c < 0 ? -1 : c > 0 ? 1 : 0;
+  // numeric-aware collation ("2" < "10"), refined by a code-point tiebreak so
+  // distinct strings are never equal ("02" and "2" are two different values)
+  const A = String(a), B = String(b);
+  const c = COLL.compare(A, B);
+  if (c) return c < 0 ? -1 : 1;
+  return A < B ? -1 : A > B ? 1 : 0;
 }
 const esc = v => String(v).slice(0, 4).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const shortVal = v => String(v).slice(0, 4);

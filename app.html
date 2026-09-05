@@ -73,6 +73,14 @@ header.top{
 }
 .run button:hover:not(:disabled){border-color:var(--accent); color:var(--accent)}
 .run button:disabled{opacity:.35; cursor:default}
+.run select{
+  appearance:none; cursor:pointer; border:1px solid var(--edge); border-radius:5px;
+  background:var(--chip); color:var(--accent); font:600 12px/1 inherit; font-family:inherit;
+  padding:7px 9px; max-width:190px;
+}
+.run select:hover:not(:disabled){border-color:var(--accent)}
+.run select:disabled{opacity:.35; cursor:default}
+.run select option{background:var(--panel); color:var(--ink)}
 .run input[type=range]{width:90px; accent-color:var(--accent)}
 .run .rlabel{font-size:11px; color:var(--ink2); font-weight:600}
 
@@ -164,6 +172,13 @@ footer.status{
     <label title="0-based — the first node is index 0">Index <input id="idx" type="number" min="0" step="1" value="0"></label>
     <div id="ops"></div>
     <div class="run">
+      <select id="tryit" aria-label="Guided experiments">
+        <option value="">⚗ Try this…</option>
+        <option value="tails">Delete tail: singly vs doubly</option>
+        <option value="trees">Search: BST chain vs AVL</option>
+        <option value="dist">Insert-at: distance = cost</option>
+        <option value="hash">Hash collisions</option>
+      </select>
       <span class="rlabel">Speed</span>
       <input type="range" id="speed" min="1" max="30" value="10" aria-label="Animation speed">
       <button id="finish" title="Jump to end of animation">⏭ Finish</button>
@@ -203,9 +218,12 @@ function randToken() {
 }
 const COLL = new Intl.Collator(undefined, { numeric: true, sensitivity: 'variant' });
 function cmp(a, b) {
-  // single collation = guaranteed total order ("2" < "10" still holds via numeric:true)
-  const c = COLL.compare(String(a), String(b));
-  return c < 0 ? -1 : c > 0 ? 1 : 0;
+  // numeric-aware collation ("2" < "10"), refined by a code-point tiebreak so
+  // distinct strings are never equal ("02" and "2" are two different values)
+  const A = String(a), B = String(b);
+  const c = COLL.compare(A, B);
+  if (c) return c < 0 ? -1 : 1;
+  return A < B ? -1 : A > B ? 1 : 0;
 }
 const esc = v => String(v).slice(0, 4).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const shortVal = v => String(v).slice(0, 4);
@@ -620,11 +638,29 @@ class SinglyList extends Struct {
   }
   delValue(R, v) {
     if (!this.head) { R.note('List is empty.'); return; }
-    let i = 0, c = this.head;
+    // one pass: keep a prev pointer while searching, unlink where we stand
+    let i = 0, c = this.head, p = null;
     while (c) {
       R.cur(c.id); R.tick();
-      if (cmp(c.v, v) === 0) { R.note(`Found <b>${esc(v)}</b> at index ${i}`); return this.delAt(R, i); }
-      c = c.next; i++;
+      if (cmp(c.v, v) === 0) {
+        R.note(`Found <b>${esc(v)}</b> at index ${i} — <b>prev</b> is already known, unlink in place`);
+        this.fx.doom.add(c.id);
+        if (p) this.fx.dying.add(p.id + '>' + c.id);
+        if (c.next) this.fx.dying.add(c.id + '>' + c.next.id);
+        this.snapFx(R);
+        if (!p) { this.head = c.next; R.note(`It was the head <code>head = head.next</code>`); }
+        else {
+          p.next = c.next;
+          if (c.next) { this.fx.fresh.add(p.id + '>' + c.next.id); R.note(`Bypass it <code>prev.next = cur.next</code>`); }
+          else R.note(`It was the tail <code>prev.next = null</code>`);
+        }
+        if (this.tail === c) this.tail = p;
+        if (!this.head) this.tail = null;
+        this.n--;
+        R.tick(); this.snapFx(R);
+        R.done('Delete value', 'O(n)'); return;
+      }
+      p = c; c = c.next; i++;
     }
     R.note(`<b>${esc(v)}</b> not found after ${R.count} steps.`); R.done('Delete value', 'O(n)');
   }
@@ -786,6 +822,30 @@ class DoublyList extends SinglyList {
     this.n--;
     R.tick(2); this.snapFx(R);
     R.done(`Delete at ${i}`, 'O(n)');
+  }
+  delValue(R, v) {
+    if (!this.head) { R.note('List is empty.'); return; }
+    let i = 0, c = this.head;
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (cmp(c.v, v) === 0) {
+        R.note(`Found <b>${esc(v)}</b> at index ${i} — unlink in both directions, right here`);
+        this.fx.doom.add(c.id);
+        if (c.prev) { this.fx.dying.add(c.prev.id + '>' + c.id); this.fx.dying.add(c.id + '>' + c.prev.id); }
+        if (c.next) { this.fx.dying.add(c.id + '>' + c.next.id); this.fx.dying.add(c.next.id + '>' + c.id); }
+        this.snapFx(R);
+        if (c.prev) c.prev.next = c.next; else this.head = c.next;
+        if (c.next) c.next.prev = c.prev; else this.tail = c.prev;
+        if (c.prev && c.next) {
+          this.fx.fresh.add(c.prev.id + '>' + c.next.id); this.fx.fresh.add(c.next.id + '>' + c.prev.id);
+        }
+        this.n--;
+        R.tick(2); R.note(`<code>prev.next = cur.next; next.prev = cur.prev</code>`); this.snapFx(R);
+        R.done('Delete value', 'O(n)'); return;
+      }
+      c = c.next; i++;
+    }
+    R.note(`<b>${esc(v)}</b> not found after ${R.count} steps.`); R.done('Delete value', 'O(n)');
   }
   generate(R) {
     this.head = this.tail = null; this.n = 0; this.staged = null;
@@ -1566,7 +1626,7 @@ class AVL extends BST {
         const s = this.minNode(nd.r);
         this.fx.hit.add(s.id); R.note(`Successor: <b>${esc(s.v)}</b>`); this.snapFx(R);
         nd.v = s.v;
-        nd.r = this.delRec(R, nd.r, s.v, { quiet: true });
+        nd.r = this.delRec(R, nd.r, s.v, {});
       } else {
         const child = nd.l || nd.r;
         this.fx.doom.add(nd.id);
@@ -1908,7 +1968,8 @@ const instances = new Map();
 let active = null, renderer, player;
 
 function setOpsEnabled(on) {
-  document.querySelectorAll('#ops button, #tabs button, #finish').forEach(b => {
+  if (window.__exp) on = false;   // guided experiment in progress: controls stay locked
+  document.querySelectorAll('#ops button, #tabs button, #finish, #tryit').forEach(b => {
     if (b.id === 'finish') { b.disabled = on; return; }   // finish only enabled while playing
     b.disabled = !on || b.dataset.hardOff === '1';
   });
@@ -1999,6 +2060,83 @@ function selectTab(key) {
   $('#count').textContent = 'steps: 0';
 }
 
+/* ---------------- Guided experiments (⚗ Try this) ---------------- */
+const EXPERIMENTS = {
+  tails: async x => {
+    await x.banner('Deleting the TAIL — same operation, two list designs. Watch the step counter.');
+    await x.op('sll', 'clear');
+    for (const v of ['A', 'B', 'C', 'D', 'E', 'F']) await x.op('sll', 'addTail', v);
+    await x.banner('Singly list: no back-links, so it must WALK to the node before tail…');
+    const c1 = await x.op('sll', 'delTail');
+    await x.banner(`Singly list: <b>${c1} steps</b>. Now the exact same delete on a doubly list…`);
+    await x.op('dll', 'clear');
+    for (const v of ['A', 'B', 'C', 'D', 'E', 'F']) await x.op('dll', 'addTail', v);
+    const c2 = await x.op('dll', 'delTail');
+    await x.banner(`Singly: ${c1} steps · Doubly: <b>${c2} steps</b> — the prev pointer is what the extra memory bought`);
+  },
+  trees: async x => {
+    await x.banner('Insert 1–7 IN ORDER into a plain BST — watch it degenerate into a chain');
+    await x.op('bst', 'clear');
+    for (const v of ['1', '2', '3', '4', '5', '6', '7']) await x.op('bst', 'ins', v);
+    const c1 = await x.op('bst', 'search', '7');
+    await x.banner(`BST search for 7: <b>${c1} steps</b> — one per level of the chain. Same values into the AVL…`);
+    await x.op('avl', 'clear');
+    for (const v of ['1', '2', '3', '4', '5', '6', '7']) await x.op('avl', 'ins', v);
+    const c2 = await x.op('avl', 'search', '7');
+    await x.banner(`BST: ${c1} steps · AVL: <b>${c2} steps</b> — same data, same operation. The SHAPE is the difference`);
+  },
+  dist: async x => {
+    await x.banner('Insert At — inside O(n), the cost is the walk, not the list size');
+    await x.op('sll', 'clear');
+    for (const v of ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']) await x.op('sll', 'addTail', v);
+    const c1 = await x.op('sll', 'insertAt', 'X', 1);
+    await x.banner(`Insert at index 1: <b>${c1} steps</b>. Same insert, further along…`);
+    const c2 = await x.op('sll', 'insertAt', 'Y', 6);
+    await x.banner(`Index 1: ${c1} steps · index 6: <b>${c2} steps</b> — distance is everything`);
+  },
+  hash: async x => {
+    await x.banner('A(65), I(73) and Q(81) all hash to bucket 1 — mod 8 wipes the difference. Collisions ahead');
+    await x.op('hash', 'clear');
+    await x.op('hash', 'ins', 'A');
+    await x.op('hash', 'ins', 'I');
+    await x.op('hash', 'ins', 'Q');
+    const c = await x.op('hash', 'search', 'Q');
+    await x.banner(`Search Q: <b>${c} steps</b> — one hash, then walking the collision chain. O(1) average still has a worst case`);
+  },
+};
+
+async function runExperiment(key) {
+  if (window.__exp || player.busy || !EXPERIMENTS[key]) return;
+  window.__exp = true;
+  setOpsEnabled(false);
+  const idle = () => new Promise(r => { const t = setInterval(() => { if (!player.busy) { clearInterval(t); r(); } }, 30); });
+  const x = {
+    banner: async text => {
+      $('#msg').innerHTML = '<b>⚗ ' + text + '</b>';
+      player.logEntry('⚗', text, true);
+      await player.delay(1800);
+    },
+    op: async (tabKey, opId, v, i) => {
+      await idle();
+      window.__exp = false; selectTab(tabKey); window.__exp = true;   // selectTab is guarded only by player.busy
+      setOpsEnabled(false);
+      const d = active.opDefs().find(o => o.id === opId);
+      if (v !== undefined) $('#val').value = v;
+      if (i !== undefined) $('#idx').value = i;
+      runOp(d);
+      await idle();
+      return parseInt($('#count').textContent.replace(/\D/g, ''), 10) || 0;
+    },
+  };
+  try { await EXPERIMENTS[key](x); }
+  catch (err) { console.error(err); }
+  finally {
+    window.__exp = false;
+    $('#tryit').value = '';
+    setOpsEnabled(true);
+  }
+}
+
 function init() {
   renderer = new Renderer($('#svg'));
   player = new Player(renderer);
@@ -2011,6 +2149,7 @@ function init() {
   }
   $('#finish').addEventListener('click', () => { player.skip = true; });
   $('#finish').disabled = true;
+  $('#tryit').addEventListener('change', e => { if (e.target.value) runExperiment(e.target.value); });
   if (window.innerWidth >= 1100) document.body.classList.add('logopen');
   $('#logbtn').addEventListener('click', () => document.body.classList.toggle('logopen'));
   $('#logx').addEventListener('click', () => document.body.classList.remove('logopen'));
