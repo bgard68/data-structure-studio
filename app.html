@@ -1,0 +1,2027 @@
+<title>Data Structure Studio</title>
+<style>
+/* Deliberate single-theme design: a dark neon lab. Every color painted explicitly. */
+:root{
+  --paper:#0a0e17; --panel:#101624; --edge:#1f2a44; --ink:#dde6ff; --ink2:#8093bb;
+  --accent:#2dd6ff; --accent-soft:#0d2a3a; --cur:#ffb020; --cur-soft:#2b2008;
+  --fresh:#2fe6a0; --cut:#ff4d6d; --badge:#a78bfa; --node:#131b2e; --node-edge:#41547e;
+  --rbred:#ff4d6d; --rbblack:#0b0f1a; --rbtext:#eef2ff; --chip:#182238;
+}
+*{box-sizing:border-box; margin:0}
+html,body{height:100%}
+body{
+  background:var(--paper); color:var(--ink); overflow:hidden;
+  font:14px/1.4 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+#app{height:100vh; display:flex; flex-direction:column}
+
+header.top{
+  display:flex; align-items:center; gap:16px; padding:8px 14px 0;
+  border-bottom:1px solid var(--edge); background:var(--panel); flex:none;
+}
+.brand{font-weight:700; letter-spacing:.16em; font-size:15px; padding-bottom:8px; white-space:nowrap; color:var(--accent); text-shadow:0 0 14px var(--accent-soft)}
+.brand .sub{font-weight:400; letter-spacing:.02em; color:var(--ink2); font-size:12px; margin-left:8px}
+@media (max-width: 1520px){ .brand .sub{display:none} }
+@media (max-width: 1330px){ #tabs button{padding:9px 8px 11px; font-size:12px} .brand{letter-spacing:.1em} }
+#tabs{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none}
+#tabs button{
+  appearance:none; border:0; background:none; color:var(--ink2); cursor:pointer;
+  font:600 12.5px/1 inherit; font-family:inherit; padding:9px 11px 11px; white-space:nowrap;
+  border-bottom:2px solid transparent;
+}
+#tabs button:hover{color:var(--ink)}
+#tabs button.on{color:var(--accent); border-bottom-color:var(--accent); text-shadow:0 0 12px var(--accent)}
+#tabs button:focus-visible,.deck button:focus-visible,.deck input:focus-visible{
+  outline:2px solid var(--accent); outline-offset:1px; border-radius:3px;
+}
+
+.deck{
+  display:flex; align-items:center; gap:14px; flex-wrap:nowrap;
+  padding:8px 14px; background:var(--panel); border-bottom:1px solid var(--edge); flex:none;
+}
+.deck label{display:flex; align-items:center; gap:6px; color:var(--ink2); font-size:12px; font-weight:600}
+.deck input{
+  width:64px; padding:6px 8px; border:1px solid var(--edge); border-radius:5px;
+  background:var(--paper); color:var(--ink); caret-color:var(--accent);
+  font:600 13.5px "Cascadia Code",Consolas,ui-monospace,monospace;
+}
+.deck input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 8px var(--accent-soft), 0 0 0 1px var(--accent)}
+#ops{display:flex; gap:8px; flex-wrap:wrap}
+.opgrp{
+  display:inline-flex; align-items:center; gap:1px;
+  background:var(--chip); border:1px solid var(--edge); border-radius:7px; padding:2px 3px 2px 0;
+}
+.opgrp .glabel{font-size:10px; font-weight:800; letter-spacing:.14em; color:var(--ink2); margin:0 6px 0 10px; user-select:none}
+.opgrp[data-grp="add"] .glabel{color:var(--fresh)}
+.opgrp[data-grp="del"] .glabel{color:var(--cut)}
+.opgrp[data-grp="etc"] .glabel{color:var(--badge)}
+.opgrp[data-grp="data"] .glabel{color:var(--accent)}
+#ops button{
+  appearance:none; cursor:pointer; border:0; border-radius:5px;
+  background:transparent; color:var(--ink); font:600 13px/1 inherit; font-family:inherit;
+  padding:8px 11px; white-space:nowrap;
+}
+#ops button:hover:not(:disabled){background:var(--panel); color:var(--accent); box-shadow:inset 0 0 0 1px var(--edge)}
+.opgrp[data-grp="del"] button:hover:not(:disabled){color:var(--cut)}
+.opgrp[data-grp="add"] button:hover:not(:disabled){color:var(--fresh)}
+#ops button:disabled{opacity:.35; cursor:default}
+.run{display:flex; align-items:center; gap:8px; margin-left:auto}
+.run button{
+  appearance:none; cursor:pointer; border:1px solid var(--edge); border-radius:5px;
+  background:transparent; color:var(--ink); font:600 12px/1 inherit; font-family:inherit;
+  padding:6px 10px; white-space:nowrap;
+}
+.run button:hover:not(:disabled){border-color:var(--accent); color:var(--accent)}
+.run button:disabled{opacity:.35; cursor:default}
+.run input[type=range]{width:90px; accent-color:var(--accent)}
+.run .rlabel{font-size:11px; color:var(--ink2); font-weight:600}
+
+main#stage{flex:1 1 0; min-height:0; position:relative}
+#svg{position:absolute; inset:0; width:100%; height:100%; display:block}
+body.logopen #svg{width:calc(100% - 292px)}
+
+#log{
+  position:absolute; top:8px; right:8px; bottom:8px; width:280px; display:none;
+  flex-direction:column; background:var(--panel); border:1px solid var(--edge); border-radius:6px;
+}
+body.logopen #log{display:flex}
+#log header{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 10px; border-bottom:1px solid var(--edge);
+  font:700 10.5px inherit; font-family:inherit; letter-spacing:.12em; color:var(--ink2);
+}
+#log header button{appearance:none; border:0; background:none; color:var(--ink2); cursor:pointer; font-size:14px; line-height:1; padding:0 2px}
+#log header button:hover{color:var(--ink)}
+#logbody{flex:1; overflow-y:auto; padding:6px 8px; display:flex; flex-direction:column; gap:5px; scrollbar-width:thin; scrollbar-color:var(--edge) transparent}
+.lentry{display:flex; gap:7px; align-items:baseline; font-size:12.5px; line-height:1.5; color:var(--ink)}
+.lentry .lstep{
+  flex:none; min-width:20px; text-align:right; color:var(--cur);
+  font:700 11px "Cascadia Code",Consolas,ui-monospace,monospace; font-variant-numeric:tabular-nums;
+}
+.lentry b{color:var(--accent)}
+.lentry.ldone{border-top:1px dashed var(--edge); padding-top:5px; margin-top:2px}
+.lentry.ldone p{color:var(--accent); font-weight:650}
+.lentry p{margin:0}
+#msg code, .lentry code{
+  background:var(--chip); color:var(--accent); border-radius:3px; padding:1px 5px;
+  font:600 11px "Cascadia Code",Consolas,ui-monospace,monospace; white-space:nowrap;
+}
+.lentry code{white-space:pre-wrap; overflow-wrap:anywhere; display:inline}
+
+.node rect,.node circle{fill:var(--node); stroke:var(--node-edge); stroke-width:1.5}
+.node text{
+  fill:var(--ink); font:600 16px "Cascadia Code",Consolas,ui-monospace,monospace;
+  text-anchor:middle; dominant-baseline:central;
+}
+.node.hl rect,.node.hl circle{stroke:var(--cur); stroke-width:3; fill:var(--cur-soft); filter:drop-shadow(0 0 7px var(--cur))}
+.node.hit rect,.node.hit circle{stroke:var(--fresh); stroke-width:3; filter:drop-shadow(0 0 7px var(--fresh))}
+.node.doom rect,.node.doom circle{stroke:var(--cut); stroke-width:3; stroke-dasharray:5 3; filter:drop-shadow(0 0 7px var(--cut))}
+.node.rb-r circle{fill:var(--rbred); stroke:var(--rbred)}
+.node.rb-r text{fill:var(--rbtext)}
+.node.rb-b circle{fill:var(--rbblack); stroke:var(--node-edge)}
+.node.rb-b text{fill:var(--rbtext)}
+.node .tag{font:600 10px "Cascadia Code",Consolas,ui-monospace,monospace; fill:var(--ink2)}
+.edge{stroke:var(--node-edge); stroke-width:1.6; fill:none}
+.edge.fresh{stroke:var(--fresh); stroke-width:2.6; filter:drop-shadow(0 0 4px var(--fresh))}
+.edge.dying{stroke:var(--cut); stroke-width:2.2; stroke-dasharray:6 4; filter:drop-shadow(0 0 4px var(--cut))}
+.edge.prevlane{opacity:.55}
+.ptr text{font:700 11.5px "Cascadia Code",Consolas,ui-monospace,monospace; text-anchor:middle}
+.ptr line{stroke-width:1.6}
+.ptr.pcur text{fill:var(--cur); text-shadow:0 0 10px var(--cur)} .ptr.pcur line{stroke:var(--cur)}
+.ptr.pbadge text{fill:var(--badge); text-shadow:0 0 10px var(--badge)} .ptr.pbadge line{stroke:var(--badge)}
+.bucket rect{fill:none; stroke:var(--edge); stroke-width:1.2}
+.bucket text{fill:var(--ink2); font:600 11px "Cascadia Code",Consolas,ui-monospace,monospace; text-anchor:middle; dominant-baseline:central}
+.slotline{stroke:var(--edge); stroke-width:1}
+.emptyhint{fill:var(--ink2); font:400 13px inherit; text-anchor:middle}
+
+footer.status{
+  flex:none; display:flex; align-items:center; gap:14px;
+  padding:7px 14px; background:var(--panel); border-top:1px solid var(--edge);
+}
+#msg{flex:1 1 auto; min-width:0; font-size:13.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#msg b{color:var(--accent)}
+#count{
+  flex:none; font:700 13.5px "Cascadia Code",Consolas,ui-monospace,monospace;
+  color:var(--cur); min-width:92px; text-align:right; font-variant-numeric:tabular-nums;
+  text-shadow:0 0 10px var(--cur);
+}
+#bigo{flex:none; display:flex; gap:6px}
+#bigo span{
+  background:var(--chip); color:var(--ink2); border-radius:4px; padding:4px 8px;
+  border:1px solid var(--edge);
+  font:600 11.5px "Cascadia Code",Consolas,ui-monospace,monospace; white-space:nowrap;
+}
+#bigo span b{color:var(--accent); font-weight:700}
+@media (prefers-reduced-motion: reduce){ #svg *{transition:none !important} }
+</style>
+<div id="app">
+  <header class="top">
+    <div class="brand">DATA STRUCTURE STUDIO<span class="sub">watch the links move</span></div>
+    <nav id="tabs" aria-label="Data structures"></nav>
+  </header>
+  <section class="deck">
+    <label>Value <input id="val" maxlength="4" spellcheck="false" placeholder="A1#"></label>
+    <label title="0-based — the first node is index 0">Index <input id="idx" type="number" min="0" step="1" value="0"></label>
+    <div id="ops"></div>
+    <div class="run">
+      <span class="rlabel">Speed</span>
+      <input type="range" id="speed" min="1" max="30" value="10" aria-label="Animation speed">
+      <button id="finish" title="Jump to end of animation">⏭ Finish</button>
+      <button id="logbtn" title="Show or hide the operation log">☰ Log</button>
+    </div>
+  </section>
+  <main id="stage">
+    <svg id="svg" role="img" aria-label="Data structure visualization"></svg>
+    <aside id="log" aria-label="Operation log">
+      <header>OPERATION LOG<button id="logx" aria-label="Close log">×</button></header>
+      <div id="logbody"></div>
+    </aside>
+  </main>
+  <footer class="status">
+    <div id="msg">Ready. Pick a structure, type a value, press an operation.</div>
+    <div id="count">steps: 0</div>
+    <div id="bigo"></div>
+  </footer>
+</div>
+
+<script>
+'use strict';
+/* ============ Structura core: recorder, renderer, player, UI ============ */
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const $ = s => document.querySelector(s);
+let uid = 1;
+const nid = () => 'n' + (uid++);
+
+const SYMS = '#@$%&*+?!';
+const ALNUM = 'ABCDEFGHJKMNPQRSTUVWXYZ0123456789';
+function randToken() {
+  const r = Math.random();
+  if (r < 0.25) return ALNUM[Math.floor(Math.random() * ALNUM.length)] + SYMS[Math.floor(Math.random() * SYMS.length)];
+  if (r < 0.6) return ALNUM[Math.floor(Math.random() * ALNUM.length)] + ALNUM[Math.floor(Math.random() * ALNUM.length)];
+  return String(Math.floor(Math.random() * 99));
+}
+const COLL = new Intl.Collator(undefined, { numeric: true, sensitivity: 'variant' });
+function cmp(a, b) {
+  // single collation = guaranteed total order ("2" < "10" still holds via numeric:true)
+  const c = COLL.compare(String(a), String(b));
+  return c < 0 ? -1 : c > 0 ? 1 : 0;
+}
+const esc = v => String(v).slice(0, 4).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const shortVal = v => String(v).slice(0, 4);
+
+/* ---------------- Recorder ---------------- */
+class Rec {
+  constructor() { this.steps = []; this.count = 0; }
+  note(text) { this.steps.push({ t: 'note', text, count: this.count }); }
+  tick(n = 1) { this.count += n; }
+  cur(id) { this.steps.push({ t: 'cur', id, count: this.count }); }
+  snap(struct, opts) { this.steps.push({ t: 'scene', scene: struct.scene(), count: this.count, slow: opts && opts.slow }); }
+  done(opName, big) { this.steps.push({ t: 'done', text: `${opName} — ${this.count} step${this.count === 1 ? '' : 's'} · ${big}`, count: this.count }); }
+}
+
+/* ---------------- Base structure ---------------- */
+class Struct {
+  constructor() { this.fx = { hl: new Set(), hit: new Set(), doom: new Set(), fresh: new Set(), dying: new Set() }; }
+  sizeInfo() { return `n = ${this.n || 0}`; }
+  clearFx() { for (const k in this.fx) this.fx[k].clear(); }
+  snapFx(R, opts) { R.snap(this, opts); this.clearFx(); }
+  scene() { return { w: 100, h: 100, nodes: [], edges: [], ptrs: [], frames: [] }; }
+  edgeCls(a, b) {
+    const k = a + '>' + b;
+    if (this.fx.fresh.has(k)) return 'fresh';
+    if (this.fx.dying.has(k)) return 'dying';
+    return '';
+  }
+  nodeCls(id, base) {
+    let c = base || '';
+    if (this.fx.hl.has(id)) c += ' hl';
+    if (this.fx.hit.has(id)) c += ' hit';
+    if (this.fx.doom.has(id)) c += ' doom';
+    return c.trim();
+  }
+}
+
+/* ---------------- Renderer ---------------- */
+class Renderer {
+  constructor(svg) {
+    this.svg = svg;
+    this.defs();
+    this.gFrames = this.layer(); this.gEdges = this.layer(); this.gNodes = this.layer(); this.gPtrs = this.layer();
+    this.nodes = new Map();   // id -> {x,y,tx,ty,alpha,talpha,el,txt,shapeEl,tagEl,scene}
+    this.edges = new Map();   // key -> {el, spec}
+    this.curId = null;
+    this.vb = { x: 0, y: 0, w: 400, h: 300 }; this.tvb = { ...this.vb };
+    this.sceneMeta = { w: 400, h: 300, frames: [], ptrs: [] };
+    this.hint = null;
+    this.rm = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    this._raf = this.frame.bind(this);
+    requestAnimationFrame(this._raf);
+  }
+  layer() { const g = document.createElementNS(SVGNS, 'g'); this.svg.appendChild(g); return g; }
+  defs() {
+    const d = document.createElementNS(SVGNS, 'defs');
+    d.innerHTML = ['', 'fresh', 'dying'].map(c => {
+      const id = 'arr' + (c || 'std');
+      return `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" class="mk-${c || 'std'}"></path></marker>`;
+    }).join('');
+    this.svg.appendChild(d);
+    const st = document.createElement('style');
+    st.textContent = '.mk-std{fill:var(--node-edge)} .mk-fresh{fill:var(--fresh)} .mk-dying{fill:var(--cut)}';
+    document.head ? document.head.appendChild(st) : document.body.appendChild(st);
+  }
+  applyScene(scene, instant) {
+    this.sceneMeta = scene;
+    const seen = new Set();
+    for (const n of scene.nodes) {
+      seen.add(n.id);
+      let vn = this.nodes.get(n.id);
+      if (!vn) {
+        const el = document.createElementNS(SVGNS, 'g');
+        const shapeEl = n.shape === 'circ'
+          ? document.createElementNS(SVGNS, 'circle')
+          : document.createElementNS(SVGNS, 'rect');
+        if (n.shape === 'circ') { shapeEl.setAttribute('r', 21); }
+        else { shapeEl.setAttribute('x', -29); shapeEl.setAttribute('y', -18); shapeEl.setAttribute('width', 58); shapeEl.setAttribute('height', 36); shapeEl.setAttribute('rx', 5); }
+        const txt = document.createElementNS(SVGNS, 'text');
+        const tagEl = document.createElementNS(SVGNS, 'text');
+        tagEl.setAttribute('class', 'tag'); tagEl.setAttribute('text-anchor', 'middle'); tagEl.setAttribute('y', n.shape === 'circ' ? 36 : 32);
+        el.appendChild(shapeEl); el.appendChild(txt); el.appendChild(tagEl);
+        this.gNodes.appendChild(el);
+        vn = { x: n.x, y: n.y, tx: n.x, ty: n.y, alpha: 0, talpha: 1, el, txt, tagEl, shapeEl };
+        this.nodes.set(n.id, vn);
+      }
+      vn.tx = n.x; vn.ty = n.y; vn.talpha = 1; vn.dead = false;
+      if (instant) { vn.x = n.x; vn.y = n.y; vn.alpha = 1; }
+      vn.el.setAttribute('class', ('node ' + (n.cls || '')).trim());
+      vn.txt.textContent = shortVal(n.v);
+      vn.tagEl.textContent = n.tag || '';
+    }
+    for (const [id, vn] of this.nodes) {
+      if (!seen.has(id)) { vn.talpha = 0; vn.dead = true; if (instant) vn.alpha = 0; }
+    }
+    // edges: rebuild key set
+    const ekeys = new Set();
+    for (const e of scene.edges) {
+      const key = e.from + '>' + e.to + ':' + (e.kind || '') + ':' + (e.lane || '');
+      ekeys.add(key);
+      let ve = this.edges.get(key);
+      if (!ve) {
+        const el = document.createElementNS(SVGNS, 'path');
+        this.gEdges.appendChild(el);
+        ve = { el }; this.edges.set(key, ve);
+      }
+      ve.spec = e;
+      ve.el.setAttribute('class', ('edge ' + (e.cls || '') + (e.lane === 'prev' ? ' prevlane' : '')).trim());
+      ve.el.setAttribute('marker-end', `url(#arr${e.cls || 'std'})`);
+    }
+    for (const [key, ve] of this.edges) if (!ekeys.has(key)) { ve.el.remove(); this.edges.delete(key); }
+    // frames (static furniture)
+    this.gFrames.innerHTML = '';
+    for (const f of scene.frames || []) {
+      if (f.t === 'rect') {
+        const g = document.createElementNS(SVGNS, 'g'); g.setAttribute('class', 'bucket');
+        g.innerHTML = `<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="4"></rect><text x="${f.x + f.w / 2}" y="${f.y + f.h / 2}">${f.label}</text>`;
+        this.gFrames.appendChild(g);
+      } else if (f.t === 'text') {
+        const t = document.createElementNS(SVGNS, 'text');
+        t.setAttribute('class', 'emptyhint'); t.setAttribute('x', f.x); t.setAttribute('y', f.y);
+        t.textContent = f.label; this.gFrames.appendChild(t);
+      }
+    }
+    // viewBox target
+    const pad = 56;
+    this.tvb = { x: scene.x0 - pad, y: scene.y0 - pad, w: scene.w + pad * 2, h: scene.h + pad * 2 };
+    if (instant) this.vb = { ...this.tvb };
+  }
+  setCur(id) { this.curId = id; }
+  frame() {
+    try { this.frameBody(); }
+    catch (err) { console.error(err); }
+    finally { requestAnimationFrame(this._raf); }  // the render loop must survive anything
+  }
+  frameBody() {
+    const k = this.rm && this.rm.matches ? 1 : 0.16;
+    for (const [id, vn] of this.nodes) {
+      vn.x += (vn.tx - vn.x) * k; vn.y += (vn.ty - vn.y) * k;
+      vn.alpha += (vn.talpha - vn.alpha) * k;
+      if (Math.abs(vn.tx - vn.x) < .4) vn.x = vn.tx;
+      if (Math.abs(vn.ty - vn.y) < .4) vn.y = vn.ty;
+      if (Math.abs(vn.talpha - vn.alpha) < .02) vn.alpha = vn.talpha;
+      if (vn.dead && vn.alpha <= 0) { vn.el.remove(); this.nodes.delete(id); continue; }
+      vn.el.setAttribute('transform', `translate(${vn.x},${vn.y})`);
+      vn.el.setAttribute('opacity', vn.alpha.toFixed(3));
+    }
+    for (const [, ve] of this.edges) this.drawEdge(ve);
+    this.drawPtrs();
+    for (const p of ['x', 'y', 'w', 'h']) {
+      this.vb[p] += (this.tvb[p] - this.vb[p]) * k;
+      if (Math.abs(this.tvb[p] - this.vb[p]) < .5) this.vb[p] = this.tvb[p];
+    }
+    this.svg.setAttribute('viewBox', `${this.vb.x} ${this.vb.y} ${this.vb.w} ${this.vb.h}`);
+  }
+  anchor(vn, other, shape) {
+    // point on node boundary toward other node
+    const dx = other.x - vn.x, dy = other.y - vn.y;
+    const d = Math.hypot(dx, dy) || 1;
+    if (shape === 'circ') return { x: vn.x + dx / d * 23, y: vn.y + dy / d * 23 };
+    // rect 58x36
+    const rx = 31, ry = 20;
+    const sx = Math.abs(dx / d) < 1e-6 ? Infinity : rx / Math.abs(dx / d);
+    const sy = Math.abs(dy / d) < 1e-6 ? Infinity : ry / Math.abs(dy / d);
+    const s = Math.min(sx, sy);
+    return { x: vn.x + dx / d * s, y: vn.y + dy / d * s };
+  }
+  drawEdge(ve) {
+    const e = ve.spec;
+    const a = this.nodes.get(e.from), b = this.nodes.get(e.to);
+    if (!a || !b) { ve.el.setAttribute('d', ''); return; }
+    if (e.from === e.to) {
+      // self-loop (single-node ring): a visible loop below the node
+      const x = a.x, y = a.y + 18;
+      ve.el.setAttribute('opacity', a.alpha.toFixed(3));
+      ve.el.setAttribute('d', `M ${x - 12} ${y} C ${x - 36} ${y + 46}, ${x + 36} ${y + 46}, ${x + 12} ${y}`);
+      return;
+    }
+    const shA = e.shape || 'rect', shB = e.shape || 'rect';
+    let p1 = this.anchor(a, b, shA), p2 = this.anchor(b, a, shB);
+    ve.el.setAttribute('opacity', Math.min(a.alpha, b.alpha).toFixed(3));
+    if (e.lane) {
+      // offset perpendicular for two-lane (doubly) edges
+      const dx = p2.x - p1.x, dy = p2.y - p1.y, d = Math.hypot(dx, dy) || 1;
+      const ox = -dy / d * 7, oy = dx / d * 7;
+      p1 = { x: p1.x + ox, y: p1.y + oy }; p2 = { x: p2.x + ox, y: p2.y + oy };
+      ve.el.setAttribute('d', `M${p1.x} ${p1.y} L${p2.x} ${p2.y}`);
+      return;
+    }
+    if (e.kind === 'arc') {
+      // long wrap-around link: bow it away from the centroid
+      const mx = (p1.x + p2.x) / 2, my = (p1.y + p2.y) / 2;
+      const dx = p2.x - p1.x, dy = p2.y - p1.y, d = Math.hypot(dx, dy) || 1;
+      const bow = e.bow || 60;
+      const cx = mx - dy / d * bow, cy = my + dx / d * bow;
+      ve.el.setAttribute('d', `M${p1.x} ${p1.y} Q${cx} ${cy} ${p2.x} ${p2.y}`);
+      return;
+    }
+    ve.el.setAttribute('d', `M${p1.x} ${p1.y} L${p2.x} ${p2.y}`);
+  }
+  drawPtrs() {
+    this.gPtrs.innerHTML = '';
+    const groups = new Map(); // nodeId+side -> [labels]
+    const list = [...(this.sceneMeta.ptrs || [])];
+    if (this.curId && this.nodes.has(this.curId)) list.push({ name: 'cur', at: this.curId, side: 's', cur: true });
+    for (const p of list) {
+      const key = p.at + '|' + (p.side || 'n');
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+    for (const [key, ps] of groups) {
+      const [id, side] = key.split('|');
+      const vn = this.nodes.get(id);
+      if (!vn) continue;
+      const up = side === 'n';
+      const isCirc = ps[0].shape === 'circ';
+      const base = isCirc ? 24 : 21;
+      ps.forEach((p, i) => {
+        const g = document.createElementNS(SVGNS, 'g');
+        g.setAttribute('class', 'ptr ' + (p.cur ? 'pcur' : 'pbadge'));
+        const gap = 16, y0 = up ? vn.y - base - 8 : vn.y + base + 8;
+        const ty = up ? y0 - i * gap - 6 : y0 + i * gap + 8;
+        const ly1 = up ? vn.y - base : vn.y + base;
+        const ly2 = up ? y0 - i * gap : y0 + i * gap;
+        g.innerHTML = `<line x1="${vn.x}" y1="${ly1}" x2="${vn.x}" y2="${ly2}"></line><text x="${vn.x}" y="${ty}">${p.name}</text>`;
+        g.setAttribute('opacity', vn.alpha.toFixed(3));
+        this.gPtrs.appendChild(g);
+      });
+    }
+  }
+}
+
+/* ---------------- Player ---------------- */
+class Player {
+  constructor(renderer) { this.R = renderer; this.busy = false; this.skip = false; }
+  speedMult() { return Number($('#speed').value) / 10; }
+  delay(ms) {
+    if (this.skip) return Promise.resolve();
+    return new Promise(res => setTimeout(res, ms / this.speedMult()));
+  }
+  logEntry(step, text, done) {
+    const body = $('#logbody');
+    const div = document.createElement('div');
+    div.className = 'lentry' + (done ? ' ldone' : '');
+    const num = document.createElement('span');
+    num.className = 'lstep'; num.textContent = step;
+    const p = document.createElement('p'); p.innerHTML = text;
+    div.appendChild(num); div.appendChild(p);
+    body.appendChild(div);
+    while (body.children.length > 90) body.removeChild(body.firstChild);
+    body.scrollTop = body.scrollHeight;
+  }
+  async play(steps, ctx) {
+    this.busy = true; this.skip = false;
+    document.body.classList.add('busy');
+    setOpsEnabled(false);
+    try {
+      const msg = $('#msg'), cnt = $('#count');
+      $('#logbody').innerHTML = '';
+      for (const s of steps) {
+        cnt.textContent = 'steps: ' + s.count;
+        if (s.t === 'note') { msg.innerHTML = s.text; this.logEntry(s.count, s.text); await this.delay(420); }
+        else if (s.t === 'cur') { this.R.setCur(s.id); await this.delay(400); }
+        else if (s.t === 'scene') { this.R.applyScene(s.scene, this.skip); await this.delay(s.slow ? 700 : 520); }
+        else if (s.t === 'done') {
+          this.R.setCur(null);
+          const line = s.text + (ctx ? ' · ' + ctx : '');
+          msg.innerHTML = '<b>' + line + '</b>';
+          this.logEntry(s.count, line, true);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      // the player must always release the controls, whatever happened mid-run
+      this.R.setCur(null);
+      this.busy = false; this.skip = false;
+      document.body.classList.remove('busy');
+      setOpsEnabled(true);
+    }
+  }
+}
+
+'use strict';
+/* ============ Linear structures: lists, stack, queue, rings ============ */
+
+function mkNode(v) { return { id: nid(), v, next: null, prev: null, staged: false }; }
+
+function sceneBounds(nodes, extra) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of nodes) { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); }
+  for (const f of extra || []) {
+    x0 = Math.min(x0, f.x); y0 = Math.min(y0, f.y);
+    x1 = Math.max(x1, f.x + (f.w || 0)); y1 = Math.max(y1, f.y + (f.h || 0));
+  }
+  if (!isFinite(x0)) { x0 = 0; y0 = 0; x1 = 400; y1 = 200; }
+  return { x0, y0, w: x1 - x0, h: y1 - y0 };
+}
+
+/* ---------------- Singly linked list ---------------- */
+class SinglyList extends Struct {
+  constructor() { super(); this.head = null; this.tail = null; this.n = 0; this.staged = null; this.stagedAt = 0; }
+  static label = 'Linked List';
+  max = 12;
+  bigo() { return [['search', `O(n) — up to ${this.n} steps now`], ['add head/tail', 'O(1)'], ['del tail', `O(n) — up to ${this.n} steps`]]; }
+  toArray() { const a = []; let c = this.head; while (c) { a.push(c); c = c.next; } return a; }
+  scene() {
+    const arr = this.toArray(); const gap = 96;
+    const ns = arr.map((nd, i) => ({ id: nd.id, v: nd.v, shape: 'rect', x: i * gap, y: 0, cls: this.nodeCls(nd.id) }));
+    if (this.staged) ns.push({ id: this.staged.id, v: this.staged.v, shape: 'rect', x: this.stagedAt * gap - 48, y: -100, cls: this.nodeCls(this.staged.id) });
+    const edges = [];
+    const all = this.staged ? arr.concat([this.staged]) : arr;
+    for (const nd of all) if (nd.next) edges.push({ from: nd.id, to: nd.next.id, cls: this.edgeCls(nd.id, nd.next.id) });
+    for (const k of this.fx.dying) { const [f, t] = k.split('>'); if (!edges.some(e => e.from === f && e.to === t)) edges.push({ from: f, to: t, cls: 'dying' }); }
+    const ptrs = [];
+    if (this.head) ptrs.push({ name: 'head', at: this.head.id, side: 'n' });
+    if (this.tail) ptrs.push({ name: 'tail', at: this.tail.id, side: 'n' });
+    const frames = arr.length || this.staged ? [] : [{ t: 'text', x: 200, y: 40, label: 'empty list — add a node', w: 0, h: 0 }];
+    const sc = { nodes: ns, edges, ptrs, frames, ...sceneBounds(ns, frames) };
+    if (!ns.length) { sc.x0 = 0; sc.y0 = 0; sc.w = 400; sc.h = 80; }
+    sc.y0 -= 40; sc.h += 60; // headroom for badges & staged lane
+    return sc;
+  }
+  full(R) { if (this.n >= this.max) { R.note(`Stage is full (max ${this.max} nodes) — delete some first.`); return true; } return false; }
+  stage(R, v, at, txt) {
+    this.staged = mkNode(v); this.stagedAt = at;
+    R.tick(); R.note(txt || `Create new node <b>${esc(v)}</b> <code>new = Node("${esc(v)}")</code>`); this.snapFx(R);
+    return this.staged;
+  }
+  land(node) { node.staged = false; this.staged = null; }
+
+  addHead(R, v) {
+    if (this.full(R)) return;
+    const nd = this.stage(R, v, 0);
+    if (this.head) {
+      nd.next = this.head; this.fx.fresh.add(nd.id + '>' + this.head.id);
+      R.tick(); R.note(`Point the new node at the old head <code>new.next = head</code> — <b>new → ${esc(this.head.v)}</b>`); this.snapFx(R);
+    }
+    this.land(nd); this.head = nd; if (!this.tail) this.tail = nd; this.n++;
+    R.tick(); R.note('Move the head pointer <code>head = new</code> — no traversal needed'); this.snapFx(R);
+    R.done('Add at head', 'O(1)');
+  }
+  addTail(R, v) {
+    if (this.full(R)) return;
+    if (!this.head) return this.addHead(R, v);
+    const nd = this.stage(R, v, this.n);
+    nd.prevLink = null;
+    this.tail.next = nd; this.fx.fresh.add(this.tail.id + '>' + nd.id);
+    R.tick(); R.note(`<b>tail</b> is already known — link it forward <code>tail.next = new</code> (no traversal)`); this.snapFx(R);
+    this.land(nd); this.tail = nd; this.n++;
+    R.tick(); R.note('Move the tail pointer <code>tail = new</code>'); this.snapFx(R);
+    R.done('Add at tail', 'O(1)');
+  }
+  walk(R, hops, from) {
+    let c = from || this.head;
+    R.cur(c.id); R.tick();
+    for (let i = 0; i < hops; i++) { c = c.next; R.tick(); R.cur(c.id); }
+    return c;
+  }
+  insertAt(R, v, i) {
+    if (this.full(R)) return;
+    if (i < 0 || i > this.n) { R.note(`Index ${i} is out of range 0…${this.n}.`); return; }
+    if (i === 0) return this.addHead(R, v);
+    if (i === this.n) { R.note(`Index ${i} = length → this is a tail insert.`); return this.addTail(R, v); }
+    R.note(`Traverse to index <b>${i - 1}</b>, the node before the slot <code>cur = cur.next</code> × ${i - 1}`);
+    const p = this.walk(R, i - 1);
+    const nd = this.stage(R, v, i, `Create new node <b>${esc(v)}</b> above the gap`);
+    nd.next = p.next; this.fx.fresh.add(nd.id + '>' + p.next.id);
+    R.tick(); R.note(`Link the new node into the chain <code>new.next = cur.next</code> — <b>new → ${esc(p.next.v)}</b>`); this.snapFx(R);
+    this.fx.dying.add(p.id + '>' + nd.next.id);
+    R.note(`The old link <b>${esc(p.v)} → ${esc(nd.next.v)}</b> is about to be cut — nothing may point past the new node`); this.snapFx(R);
+    p.next = nd; this.fx.fresh.add(p.id + '>' + nd.id);
+    this.land(nd); this.n++;
+    R.tick(); R.note(`Repoint the previous node <code>cur.next = new</code> — <b>${esc(p.v)} → ${esc(nd.v)}</b>. Two link writes total`); this.snapFx(R);
+    R.done(`Insert at ${i}`, 'O(n)');
+  }
+  delHead(R) {
+    if (!this.head) { R.note('List is empty.'); return; }
+    const h = this.head;
+    this.fx.doom.add(h.id);
+    if (h.next) this.fx.dying.add(h.id + '>' + h.next.id);
+    R.tick(); R.note(`Unlink <b>${esc(h.v)}</b>: step the head pointer over it <code>head = head.next</code>`); this.snapFx(R);
+    this.head = h.next; if (!this.head) this.tail = null; this.n--;
+    this.snapFx(R);
+    R.done('Delete at head', 'O(1)');
+  }
+  delTail(R) {
+    if (!this.head) { R.note('List is empty.'); return; }
+    if (this.n === 1) { R.note('Single node — it is both head and tail.'); return this.delHead(R); }
+    R.note('A singly list has no back-links, so we must walk to the node <i>before</i> tail <code>while (cur.next != tail)</code>');
+    const p = this.walk(R, this.n - 2);
+    this.fx.doom.add(this.tail.id); this.fx.dying.add(p.id + '>' + this.tail.id);
+    R.tick(); R.note(`Cut the last link <code>cur.next = null</code> — old tail <b>${esc(this.tail.v)}</b> is now unreachable`); this.snapFx(R);
+    p.next = null; this.tail = p; this.n--;
+    R.tick(); R.note('Move the tail pointer back <code>tail = cur</code>'); this.snapFx(R);
+    R.done('Delete at tail', 'O(n)');
+  }
+  delAt(R, i) {
+    if (i < 0 || i >= this.n) { R.note(`Index ${i} is out of range 0…${this.n - 1}.`); return; }
+    if (i === 0) return this.delHead(R);
+    if (i === this.n - 1) return this.delTail(R);
+    R.note(`Traverse to index <b>${i - 1}</b>`);
+    const p = this.walk(R, i - 1);
+    const vic = p.next;
+    this.fx.doom.add(vic.id); this.fx.dying.add(p.id + '>' + vic.id);
+    if (vic.next) this.fx.dying.add(vic.id + '>' + vic.next.id);
+    R.note(`Bypass <b>${esc(vic.v)}</b> with one write <code>prev.next = cur.next</code> — <b>${esc(p.v)} → ${esc(vic.next.v)}</b>; nothing points at <b>${esc(vic.v)}</b> anymore`); this.snapFx(R);
+    p.next = vic.next; this.fx.fresh.add(p.id + '>' + vic.next.id);
+    this.n--;
+    R.tick(); this.snapFx(R);
+    R.done(`Delete at ${i}`, 'O(n)');
+  }
+  delValue(R, v) {
+    if (!this.head) { R.note('List is empty.'); return; }
+    let i = 0, c = this.head;
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (cmp(c.v, v) === 0) { R.note(`Found <b>${esc(v)}</b> at index ${i}`); return this.delAt(R, i); }
+      c = c.next; i++;
+    }
+    R.note(`<b>${esc(v)}</b> not found after ${R.count} steps.`); R.done('Delete value', 'O(n)');
+  }
+  editAt(R, v, i) {
+    if (i < 0 || i >= this.n) { R.note(`Index ${i} is out of range 0…${this.n - 1}.`); return; }
+    R.note(`Traverse to index <b>${i}</b> <code>cur = cur.next</code> × ${i}`);
+    const c = this.walk(R, i);
+    const old = c.v; c.v = v; this.fx.hit.add(c.id);
+    R.tick(); R.note(`Overwrite the value in place <code>cur.value = "${esc(v)}"</code> — <b>${esc(old)}</b> becomes <b>${esc(v)}</b>; no links change`); this.snapFx(R);
+    R.done(`Edit at ${i}`, 'O(n)');
+  }
+  search(R, v) {
+    let c = this.head, i = 0;
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (cmp(c.v, v) === 0) {
+        this.fx.hit.add(c.id); R.note(`Found <b>${esc(v)}</b> at index ${i}`); this.snapFx(R);
+        R.done('Search', 'O(n)'); return;
+      }
+      c = c.next; i++;
+    }
+    R.note(`<b>${esc(v)}</b> is not in the list.`); R.done('Search', 'O(n)');
+  }
+  clear(R) {
+    if (!this.head) { R.note('Already empty.'); return; }
+    for (const nd of this.toArray()) this.fx.doom.add(nd.id);
+    R.tick(); R.note('Drop the entry pointers <code>head = null; tail = null</code> — every node becomes unreachable at once'); this.snapFx(R);
+    this.head = this.tail = null; this.n = 0;
+    this.snapFx(R);
+    R.done('Delete all', 'O(1)');
+  }
+  generate(R) {
+    this.head = this.tail = null; this.n = 0; this.staged = null;
+    const k = 5 + Math.floor(Math.random() * 3);
+    R.note(`Building ${k} random nodes at the tail…`);
+    for (let j = 0; j < k; j++) {
+      const nd = mkNode(randToken());
+      if (!this.head) { this.head = this.tail = nd; } else { this.tail.next = nd; this.tail = nd; }
+      this.n++; R.tick(); this.snapFx(R);
+    }
+    R.done('Generate', 'O(n)');
+  }
+  opDefs() {
+    return [
+      { id: 'addHead', label: '+ Head', grp: 'add', val: 1, run: (R, v) => this.addHead(R, v) },
+      { id: 'addTail', label: '+ Tail', grp: 'add', val: 1, run: (R, v) => this.addTail(R, v) },
+      { id: 'insertAt', label: '+ At i', grp: 'add', val: 1, idx: 1, run: (R, v, i) => this.insertAt(R, v, i) },
+      { id: 'delHead', label: 'Head', grp: 'del', danger: 1, run: R => this.delHead(R) },
+      { id: 'delTail', label: 'Tail', grp: 'del', danger: 1, run: R => this.delTail(R) },
+      { id: 'delAt', label: 'At i', grp: 'del', idx: 1, danger: 1, run: (R, v, i) => this.delAt(R, i) },
+      { id: 'delVal', label: 'Value', grp: 'del', val: 1, danger: 1, run: (R, v) => this.delValue(R, v) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'editAt', label: 'Edit at i', grp: 'etc', val: 1, idx: 1, run: (R, v, i) => this.editAt(R, v, i) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+/* ---------------- Doubly linked list ---------------- */
+class DoublyList extends SinglyList {
+  static label = 'Doubly Linked';
+  bigo() { return [['search', `O(n) — up to ${this.n} now`], ['add/del head+tail', 'O(1)'], ['insert at', `O(n) — up to ${Math.ceil(this.n / 2)} from nearer end`]]; }
+  scene() {
+    const sc = super.scene();
+    const arr = this.toArray();
+    const all = this.staged ? arr.concat([this.staged]) : arr;
+    for (const nd of all) if (nd.prev && nd.prev.next === nd || nd.prev && nd.staged === false)
+      sc.edges.push({ from: nd.id, to: nd.prev.id, lane: 'prev', cls: this.edgeCls(nd.id, nd.prev.id) });
+    return sc;
+  }
+  addHead(R, v) {
+    if (this.full(R)) return;
+    const nd = this.stage(R, v, 0);
+    if (this.head) {
+      nd.next = this.head; this.head.prev = nd;
+      this.fx.fresh.add(nd.id + '>' + this.head.id); this.fx.fresh.add(this.head.id + '>' + nd.id);
+      R.tick(2); R.note(`Wire both directions <code>new.next = head; head.prev = new</code> — 2 link writes`); this.snapFx(R);
+    }
+    this.land(nd); this.head = nd; if (!this.tail) this.tail = nd; this.n++;
+    R.tick(); R.note('Move the head pointer <code>head = new</code>'); this.snapFx(R);
+    R.done('Add at head', 'O(1)');
+  }
+  addTail(R, v) {
+    if (this.full(R)) return;
+    if (!this.head) return this.addHead(R, v);
+    const nd = this.stage(R, v, this.n);
+    nd.prev = this.tail; this.tail.next = nd;
+    this.fx.fresh.add(this.tail.id + '>' + nd.id); this.fx.fresh.add(nd.id + '>' + this.tail.id);
+    R.tick(2); R.note(`Wire both directions at the tail <code>tail.next = new; new.prev = tail</code> — no traversal`); this.snapFx(R);
+    this.land(nd); this.tail = nd; this.n++;
+    R.tick(); R.note('Move the tail pointer <code>tail = new</code>'); this.snapFx(R);
+    R.done('Add at tail', 'O(1)');
+  }
+  walkFromTail(R, hopsBack) {
+    let c = this.tail;
+    R.cur(c.id); R.tick();
+    for (let i = 0; i < hopsBack; i++) { c = c.prev; R.tick(); R.cur(c.id); }
+    return c;
+  }
+  insertAt(R, v, i) {
+    if (this.full(R)) return;
+    if (i < 0 || i > this.n) { R.note(`Index ${i} is out of range 0…${this.n}.`); return; }
+    if (i === 0) return this.addHead(R, v);
+    if (i === this.n) { R.note(`Index ${i} = length → tail insert.`); return this.addTail(R, v); }
+    let p;
+    if (i - 1 <= this.n - 1 - i) {
+      R.note(`Index ${i} is in the first half → traverse forward from <b>head</b>`);
+      p = this.walk(R, i - 1);
+    } else {
+      R.note(`Index ${i} is in the second half → traverse backward from <b>tail</b> via <b>prev</b>`);
+      p = this.walkFromTail(R, this.n - i);
+    }
+    const nd = this.stage(R, v, i);
+    const q = p.next;
+    this.fx.dying.add(p.id + '>' + q.id); this.fx.dying.add(q.id + '>' + p.id);
+    R.note(`Cut both old links between <b>${esc(p.v)}</b> and <b>${esc(q.v)}</b> — the gap is open in both directions`); this.snapFx(R);
+    nd.next = q; nd.prev = p; p.next = nd; q.prev = nd;
+    this.fx.fresh.add(p.id + '>' + nd.id); this.fx.fresh.add(nd.id + '>' + q.id);
+    this.fx.fresh.add(nd.id + '>' + p.id); this.fx.fresh.add(q.id + '>' + nd.id);
+    this.land(nd); this.n++;
+    R.tick(4); R.note('Wire 4 new links <code>new.prev = before; new.next = after; before.next = new; after.prev = new</code>'); this.snapFx(R);
+    R.done(`Insert at ${i}`, 'O(n)');
+  }
+  delHead(R) {
+    if (!this.head) { R.note('List is empty.'); return; }
+    const h = this.head;
+    this.fx.doom.add(h.id);
+    if (h.next) { this.fx.dying.add(h.id + '>' + h.next.id); this.fx.dying.add(h.next.id + '>' + h.id); }
+    R.tick(); R.note(`Unlink head <b>${esc(h.v)}</b>; clear <b>${h.next ? esc(h.next.v) + '.prev' : 'tail'}</b>`); this.snapFx(R);
+    this.head = h.next; if (this.head) this.head.prev = null; else this.tail = null; this.n--;
+    R.tick(); this.snapFx(R);
+    R.done('Delete at head', 'O(1)');
+  }
+  delTail(R) {
+    if (!this.tail) { R.note('List is empty.'); return; }
+    if (this.n === 1) return this.delHead(R);
+    const t = this.tail;
+    this.fx.doom.add(t.id);
+    this.fx.dying.add(t.prev.id + '>' + t.id); this.fx.dying.add(t.id + '>' + t.prev.id);
+    R.note(`<b>tail.prev</b> is known — no traversal. Cut both links to <b>${esc(t.v)}</b>`); this.snapFx(R);
+    this.tail = t.prev; this.tail.next = null; this.n--;
+    R.tick(2); R.note('Step the tail back <code>tail = tail.prev; tail.next = null</code>'); this.snapFx(R);
+    R.done('Delete at tail', 'O(1)');
+  }
+  delAt(R, i) {
+    if (i < 0 || i >= this.n) { R.note(`Index ${i} is out of range 0…${this.n - 1}.`); return; }
+    if (i === 0) return this.delHead(R);
+    if (i === this.n - 1) return this.delTail(R);
+    let vic;
+    if (i <= this.n - 1 - i) { R.note(`Traverse forward to index <b>${i}</b>`); vic = this.walk(R, i); }
+    else { R.note(`Traverse backward to index <b>${i}</b>`); vic = this.walkFromTail(R, this.n - 1 - i); }
+    this.fx.doom.add(vic.id);
+    this.fx.dying.add(vic.prev.id + '>' + vic.id); this.fx.dying.add(vic.id + '>' + vic.prev.id);
+    this.fx.dying.add(vic.id + '>' + vic.next.id); this.fx.dying.add(vic.next.id + '>' + vic.id);
+    R.note(`Bypass <b>${esc(vic.v)}</b> in both directions <code>prev.next = cur.next; next.prev = cur.prev</code>`); this.snapFx(R);
+    vic.prev.next = vic.next; vic.next.prev = vic.prev;
+    this.fx.fresh.add(vic.prev.id + '>' + vic.next.id); this.fx.fresh.add(vic.next.id + '>' + vic.prev.id);
+    this.n--;
+    R.tick(2); this.snapFx(R);
+    R.done(`Delete at ${i}`, 'O(n)');
+  }
+  generate(R) {
+    this.head = this.tail = null; this.n = 0; this.staged = null;
+    const k = 5 + Math.floor(Math.random() * 3);
+    R.note(`Building ${k} random nodes…`);
+    for (let j = 0; j < k; j++) {
+      const nd = mkNode(randToken());
+      if (!this.head) this.head = this.tail = nd;
+      else { nd.prev = this.tail; this.tail.next = nd; this.tail = nd; }
+      this.n++; R.tick(); this.snapFx(R);
+    }
+    R.done('Generate', 'O(n)');
+  }
+}
+
+'use strict';
+/* ============ Stack, Queue, Circular rings ============ */
+
+class StackLIFO extends SinglyList {
+  static label = 'Stack · LIFO';
+  max = 9;
+  bigo() { return [['push / pop / peek', 'O(1)'], ['search', `O(n) — up to ${this.n} now`]]; }
+  scene() {
+    const arr = this.toArray(); const gap = 54;
+    const ns = arr.map((nd, i) => ({ id: nd.id, v: nd.v, shape: 'rect', x: 0, y: i * gap, cls: this.nodeCls(nd.id) }));
+    if (this.staged) ns.push({ id: this.staged.id, v: this.staged.v, shape: 'rect', x: -140, y: 0, cls: this.nodeCls(this.staged.id) });
+    const edges = [];
+    const all = this.staged ? arr.concat([this.staged]) : arr;
+    for (const nd of all) if (nd.next) edges.push({ from: nd.id, to: nd.next.id, cls: this.edgeCls(nd.id, nd.next.id) });
+    for (const k of this.fx.dying) { const [f, t] = k.split('>'); if (!edges.some(e => e.from === f && e.to === t)) edges.push({ from: f, to: t, cls: 'dying' }); }
+    const ptrs = this.head ? [{ name: 'top', at: this.head.id, side: 'n' }] : [];
+    const frames = ns.length ? [] : [{ t: 'text', x: 0, y: 40, label: 'empty stack — push a value', w: 0, h: 0 }];
+    const sc = { nodes: ns, edges, ptrs, frames, ...sceneBounds(ns, frames) };
+    if (!ns.length) { sc.x0 = -200; sc.y0 = 0; sc.w = 400; sc.h = 80; }
+    sc.y0 -= 42; sc.h += 62; sc.x0 -= 60; sc.w += 120;
+    return sc;
+  }
+  push(R, v) {
+    if (this.full(R)) return;
+    const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — LIFO: last in, first out`);
+    if (this.head) {
+      nd.next = this.head; this.fx.fresh.add(nd.id + '>' + this.head.id);
+      R.tick(); R.note(`Stack the new node on the pile <code>new.next = top</code> — <b>new → ${esc(this.head.v)}</b>`); this.snapFx(R);
+    }
+    this.land(nd); this.head = nd; if (!this.tail) this.tail = nd; this.n++;
+    R.tick(); R.note('Move the top pointer <code>top = new</code> — the stack only ever touches its top'); this.snapFx(R);
+    R.done('Push', 'O(1)');
+  }
+  pop(R) {
+    if (!this.head) { R.note('Stack is empty — nothing to pop.'); return; }
+    const h = this.head;
+    this.fx.doom.add(h.id);
+    if (h.next) this.fx.dying.add(h.id + '>' + h.next.id);
+    R.tick(); R.note(`Pop <b>${esc(h.v)}</b> <code>top = top.next</code> — last in, first out`); this.snapFx(R);
+    this.head = h.next; if (!this.head) this.tail = null; this.n--;
+    R.tick(); this.snapFx(R);
+    R.done('Pop', 'O(1)');
+  }
+  peek(R) {
+    if (!this.head) { R.note('Stack is empty.'); return; }
+    this.fx.hit.add(this.head.id);
+    R.tick(); R.note(`Peek: <b>top</b> holds <b>${esc(this.head.v)}</b> — read without removing`); this.snapFx(R);
+    R.done('Peek', 'O(1)');
+  }
+  generate(R) {
+    this.head = this.tail = null; this.n = 0; this.staged = null;
+    const k = 4 + Math.floor(Math.random() * 3);
+    R.note(`Pushing ${k} random values…`);
+    for (let j = 0; j < k; j++) {
+      const nd = mkNode(randToken());
+      nd.next = this.head; this.head = nd; if (!this.tail) this.tail = nd;
+      this.n++; R.tick(); this.snapFx(R);
+    }
+    R.done('Generate', 'O(n)');
+  }
+  opDefs() {
+    return [
+      { id: 'push', label: 'Push', grp: 'add', val: 1, run: (R, v) => this.push(R, v) },
+      { id: 'pop', label: 'Pop', grp: 'del', danger: 1, run: R => this.pop(R) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'peek', label: 'Peek', grp: 'etc', run: R => this.peek(R) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+class QueueFIFO extends SinglyList {
+  static label = 'Queue · FIFO';
+  bigo() { return [['enqueue / dequeue', 'O(1)'], ['search', `O(n) — up to ${this.n} now`]]; }
+  scene() {
+    const sc = super.scene();
+    sc.ptrs = [];
+    if (this.head) sc.ptrs.push({ name: 'front', at: this.head.id, side: 'n' });
+    if (this.tail) sc.ptrs.push({ name: 'rear', at: this.tail.id, side: 'n' });
+    return sc;
+  }
+  enqueue(R, v) {
+    if (this.full(R)) return;
+    if (!this.head) {
+      const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — queue is empty, it becomes front and rear`);
+      this.land(nd); this.head = this.tail = nd; this.n++;
+      R.tick(); this.snapFx(R); R.done('Enqueue', 'O(1)'); return;
+    }
+    const nd = this.stage(R, v, this.n, `Create node <b>${esc(v)}</b> — FIFO: join at the <b>rear</b>`);
+    this.tail.next = nd; this.fx.fresh.add(this.tail.id + '>' + nd.id);
+    R.tick(); R.note('Link it behind the last rider <code>rear.next = new</code>'); this.snapFx(R);
+    this.land(nd); this.tail = nd; this.n++;
+    R.tick(); R.note('Move the rear pointer <code>rear = new</code>'); this.snapFx(R);
+    R.done('Enqueue', 'O(1)');
+  }
+  dequeue(R) {
+    if (!this.head) { R.note('Queue is empty — nothing to dequeue.'); return; }
+    const h = this.head;
+    this.fx.doom.add(h.id);
+    if (h.next) this.fx.dying.add(h.id + '>' + h.next.id);
+    R.tick(); R.note(`Dequeue <b>${esc(h.v)}</b> <code>front = front.next</code> — first in, first out`); this.snapFx(R);
+    this.head = h.next; if (!this.head) this.tail = null; this.n--;
+    R.tick(); this.snapFx(R);
+    R.done('Dequeue', 'O(1)');
+  }
+  peek(R) {
+    if (!this.head) { R.note('Queue is empty.'); return; }
+    this.fx.hit.add(this.head.id);
+    R.tick(); R.note(`Peek: <b>front</b> holds <b>${esc(this.head.v)}</b> — read without removing`); this.snapFx(R);
+    R.done('Peek', 'O(1)');
+  }
+  opDefs() {
+    return [
+      { id: 'enq', label: 'Enqueue', grp: 'add', val: 1, run: (R, v) => this.enqueue(R, v) },
+      { id: 'deq', label: 'Dequeue', grp: 'del', danger: 1, run: R => this.dequeue(R) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'peek', label: 'Peek', grp: 'etc', run: R => this.peek(R) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+/* ---------------- Circular ring base (ellipse layout) ---------------- */
+class RingBase extends SinglyList {
+  max = 10;
+  ringScene(doubly) {
+    const arr = this.toArray(); // toArray must terminate on rings — overridden below
+    const n = arr.length;
+    const rx = Math.max(150, n * 34), ry = rx * 0.52;
+    const ns = arr.map((nd, i) => {
+      const a = -Math.PI / 2 + (i / Math.max(n, 1)) * Math.PI * 2;
+      return { id: nd.id, v: nd.v, shape: 'rect', x: Math.cos(a) * rx, y: Math.sin(a) * ry, cls: this.nodeCls(nd.id) };
+    });
+    if (this.staged) ns.push({ id: this.staged.id, v: this.staged.v, shape: 'rect', x: 0, y: 0, cls: this.nodeCls(this.staged.id) });
+    const edges = [];
+    const all = this.staged ? arr.concat([this.staged]) : arr;
+    for (const nd of all) {
+      if (nd.next) edges.push({ from: nd.id, to: nd.next.id, cls: this.edgeCls(nd.id, nd.next.id), self: nd.next === nd });
+      if (doubly && nd.prev) edges.push({ from: nd.id, to: nd.prev.id, lane: 'prev', cls: this.edgeCls(nd.id, nd.prev.id) });
+    }
+    for (const k of this.fx.dying) { const [f, t] = k.split('>'); if (!edges.some(e => e.from === f && e.to === t)) edges.push({ from: f, to: t, cls: 'dying' }); }
+    const ptrs = [];
+    if (this.head) ptrs.push({ name: 'front', at: this.head.id, side: 'n' });
+    if (this.tail && this.tail !== this.head) ptrs.push({ name: 'rear', at: this.tail.id, side: 's' });
+    else if (this.tail) ptrs.push({ name: 'rear', at: this.tail.id, side: 'n' });
+    const frames = ns.length ? [] : [{ t: 'text', x: 0, y: 0, label: 'empty ring — enqueue a value', w: 0, h: 0 }];
+    const sc = { nodes: ns, edges, ptrs, frames, ...sceneBounds(ns, frames) };
+    if (!ns.length) { sc.x0 = -200; sc.y0 = -60; sc.w = 400; sc.h = 120; }
+    sc.x0 -= 46; sc.w += 92; sc.y0 -= 52; sc.h += 104;
+    return sc;
+  }
+  toArray() {
+    const a = []; let c = this.head;
+    while (c) { a.push(c); c = c.next; if (c === this.head) break; }
+    return a;
+  }
+  walk(R, hops, from) {
+    let c = from || this.head;
+    R.cur(c.id); R.tick();
+    for (let i = 0; i < hops; i++) { c = c.next; R.tick(); R.cur(c.id); }
+    return c;
+  }
+}
+
+class CircularQueue extends RingBase {
+  static label = 'Circular Queue';
+  bigo() { return [['enqueue / dequeue', 'O(1)'], ['del rear', `O(n) — up to ${this.n} now`], ['search', `O(n) — up to ${this.n}`]]; }
+  scene() { return this.ringScene(false); }
+  enqueue(R, v) {
+    if (this.full(R)) return;
+    if (!this.head) {
+      const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — alone in the ring, its next points to <b>itself</b>`);
+      nd.next = nd; this.land(nd); this.head = this.tail = nd; this.n++;
+      R.tick(2); this.snapFx(R); R.done('Enqueue', 'O(1)'); return;
+    }
+    const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — it will join between <b>rear</b> and <b>front</b>`);
+    nd.next = this.head; this.fx.fresh.add(nd.id + '>' + this.head.id);
+    R.tick(); R.note('Aim the new node at the front <code>new.next = front</code> — this becomes the wrap-around link'); this.snapFx(R);
+    this.fx.dying.add(this.tail.id + '>' + this.head.id);
+    R.note('The old wrap link <b>rear → front</b> is cut — for a moment the circle is open'); this.snapFx(R);
+    this.tail.next = nd; this.fx.fresh.add(this.tail.id + '>' + nd.id);
+    this.land(nd); this.tail = nd; this.n++;
+    R.tick(2); R.note('Close the circle behind it <code>rear.next = new; rear = new</code> — 2 link writes, no traversal'); this.snapFx(R);
+    R.done('Enqueue', 'O(1)');
+  }
+  dequeue(R) {
+    if (!this.head) { R.note('Ring is empty.'); return; }
+    const h = this.head;
+    if (this.n === 1) {
+      this.fx.doom.add(h.id); this.fx.dying.add(h.id + '>' + h.id);
+      R.tick(); R.note(`Remove the only node <b>${esc(h.v)}</b>`); this.snapFx(R);
+      this.head = this.tail = null; this.n = 0; this.snapFx(R);
+      R.done('Dequeue', 'O(1)'); return;
+    }
+    this.fx.doom.add(h.id);
+    this.fx.dying.add(h.id + '>' + h.next.id); this.fx.dying.add(this.tail.id + '>' + h.id);
+    R.tick(); R.note(`Dequeue <b>${esc(h.v)}</b>: both the front pointer <i>and</i> rear's wrap link must move`); this.snapFx(R);
+    this.head = h.next; this.tail.next = this.head;
+    this.fx.fresh.add(this.tail.id + '>' + this.head.id);
+    this.n--;
+    R.tick(2); R.note('Re-close the ring <code>front = front.next; rear.next = front</code> — circle intact'); this.snapFx(R);
+    R.done('Dequeue', 'O(1)');
+  }
+  delTail(R) {
+    if (!this.head) { R.note('Ring is empty.'); return; }
+    if (this.n === 1) return this.dequeue(R);
+    R.note('A singly ring has no back-links: walk from <b>front</b> to the node before <b>rear</b> <code>while (cur.next != rear)</code>');
+    const p = this.walk(R, this.n - 2);
+    this.fx.doom.add(this.tail.id);
+    this.fx.dying.add(p.id + '>' + this.tail.id); this.fx.dying.add(this.tail.id + '>' + this.head.id);
+    R.note(`Unlink rear <b>${esc(this.tail.v)}</b> and re-close the circle <code>cur.next = front; rear = cur</code>`); this.snapFx(R);
+    p.next = this.head; this.tail = p; this.n--;
+    this.fx.fresh.add(p.id + '>' + this.head.id);
+    R.tick(2); this.snapFx(R);
+    R.done('Delete rear', 'O(n)');
+  }
+  search(R, v) {
+    if (!this.head) { R.note('Ring is empty.'); return; }
+    let c = this.head, i = 0;
+    do {
+      R.cur(c.id); R.tick();
+      if (cmp(c.v, v) === 0) {
+        this.fx.hit.add(c.id); R.note(`Found <b>${esc(v)}</b> at position ${i}`); this.snapFx(R);
+        R.done('Search', 'O(n)'); return;
+      }
+      c = c.next; i++;
+    } while (c !== this.head);
+    R.note(`Walked the full circle — <b>${esc(v)}</b> is not here. Circular lists need a stop condition!`);
+    R.done('Search', 'O(n)');
+  }
+  clear(R) {
+    if (!this.head) { R.note('Already empty.'); return; }
+    for (const nd of this.toArray()) this.fx.doom.add(nd.id);
+    R.tick(); R.note('Break the ring <code>front = null; rear = null</code> — every node becomes unreachable'); this.snapFx(R);
+    this.head = this.tail = null; this.n = 0; this.snapFx(R);
+    R.done('Delete all', 'O(1)');
+  }
+  generate(R) {
+    this.head = this.tail = null; this.n = 0; this.staged = null;
+    const k = 5 + Math.floor(Math.random() * 3);
+    R.note(`Building a ring of ${k}…`);
+    for (let j = 0; j < k; j++) {
+      const nd = mkNode(randToken());
+      if (!this.head) { this.head = this.tail = nd; nd.next = nd; }
+      else { nd.next = this.head; this.tail.next = nd; this.tail = nd; }
+      this.n++; R.tick(); this.snapFx(R);
+    }
+    R.done('Generate', 'O(n)');
+  }
+  opDefs() {
+    return [
+      { id: 'enq', label: 'Enqueue', grp: 'add', val: 1, run: (R, v) => this.enqueue(R, v) },
+      { id: 'deq', label: 'Front', grp: 'del', danger: 1, run: R => this.dequeue(R) },
+      { id: 'delTail', label: 'Rear', grp: 'del', danger: 1, run: R => this.delTail(R) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+class CircularDoubly extends RingBase {
+  static label = 'Circular Doubly';
+  bigo() { return [['enq / deq / del rear', 'O(1)'], ['insert at', `O(n) — up to ${this.n} now`], ['search', `O(n) — up to ${this.n}`]]; }
+  scene() { return this.ringScene(true); }
+  enqueue(R, v) {
+    if (this.full(R)) return;
+    if (!this.head) {
+      const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — its next <i>and</i> prev point to itself`);
+      nd.next = nd; nd.prev = nd; this.land(nd); this.head = this.tail = nd; this.n++;
+      R.tick(2); this.snapFx(R); R.done('Enqueue', 'O(1)'); return;
+    }
+    const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — splice between <b>rear</b> and <b>front</b>`);
+    this.fx.dying.add(this.tail.id + '>' + this.head.id); this.fx.dying.add(this.head.id + '>' + this.tail.id);
+    R.note('Cut both wrap links <b>rear ⇄ front</b> — the seam is open in both directions'); this.snapFx(R);
+    nd.next = this.head; nd.prev = this.tail;
+    this.tail.next = nd; this.head.prev = nd;
+    this.fx.fresh.add(this.tail.id + '>' + nd.id); this.fx.fresh.add(nd.id + '>' + this.head.id);
+    this.fx.fresh.add(nd.id + '>' + this.tail.id); this.fx.fresh.add(this.head.id + '>' + nd.id);
+    this.land(nd); this.tail = nd; this.n++;
+    R.tick(5); R.note('Wire 4 links <code>new.prev = rear; new.next = front; rear.next = new; front.prev = new</code>, then <code>rear = new</code> — 5 writes'); this.snapFx(R);
+    R.done('Enqueue', 'O(1)');
+  }
+  dequeue(R) {
+    if (!this.head) { R.note('Ring is empty.'); return; }
+    if (this.n === 1) {
+      const h = this.head;
+      this.fx.doom.add(h.id); R.tick(); R.note(`Remove the only node <b>${esc(h.v)}</b>`); this.snapFx(R);
+      this.head = this.tail = null; this.n = 0; this.snapFx(R);
+      R.done('Dequeue', 'O(1)'); return;
+    }
+    const h = this.head;
+    this.fx.doom.add(h.id);
+    this.fx.dying.add(this.tail.id + '>' + h.id); this.fx.dying.add(h.id + '>' + h.next.id);
+    this.fx.dying.add(h.id + '>' + this.tail.id); this.fx.dying.add(h.next.id + '>' + h.id);
+    R.tick(); R.note(`Dequeue <b>${esc(h.v)}</b> — 4 links touch it, both directions must be re-wired`); this.snapFx(R);
+    this.head = h.next; this.head.prev = this.tail; this.tail.next = this.head;
+    this.fx.fresh.add(this.tail.id + '>' + this.head.id); this.fx.fresh.add(this.head.id + '>' + this.tail.id);
+    this.n--;
+    R.tick(2); this.snapFx(R);
+    R.done('Dequeue', 'O(1)');
+  }
+  delTail(R) {
+    if (!this.tail) { R.note('Ring is empty.'); return; }
+    if (this.n === 1) return this.dequeue(R);
+    const t = this.tail;
+    this.fx.doom.add(t.id);
+    this.fx.dying.add(t.prev.id + '>' + t.id); this.fx.dying.add(t.id + '>' + this.head.id);
+    this.fx.dying.add(t.id + '>' + t.prev.id); this.fx.dying.add(this.head.id + '>' + t.id);
+    R.note(`<b>rear.prev</b> is known — no walk needed, unlike the singly ring. All 4 links touching <b>${esc(t.v)}</b> are cut`); this.snapFx(R);
+    this.tail = t.prev; this.tail.next = this.head; this.head.prev = this.tail;
+    this.fx.fresh.add(this.tail.id + '>' + this.head.id); this.fx.fresh.add(this.head.id + '>' + this.tail.id);
+    this.n--;
+    R.tick(3); R.note(`Re-close the ring <code>rear = rear.prev; rear.next = front; front.prev = rear</code> — 3 writes`); this.snapFx(R);
+    R.done('Delete rear', 'O(1)');
+  }
+  insertFront(R, v) {
+    const nd = this.stage(R, v, 0, `Create node <b>${esc(v)}</b> — same splice as rear, but <b>front</b> will move`);
+    this.fx.dying.add(this.tail.id + '>' + this.head.id); this.fx.dying.add(this.head.id + '>' + this.tail.id);
+    R.note('Cut both wrap links <b>rear ⇄ front</b>'); this.snapFx(R);
+    nd.next = this.head; nd.prev = this.tail;
+    this.tail.next = nd; this.head.prev = nd;
+    this.fx.fresh.add(this.tail.id + '>' + nd.id); this.fx.fresh.add(nd.id + '>' + this.head.id);
+    this.fx.fresh.add(nd.id + '>' + this.tail.id); this.fx.fresh.add(this.head.id + '>' + nd.id);
+    this.land(nd); this.head = nd; this.n++;
+    R.tick(5); R.note('Wire 4 links <code>new.prev = rear; new.next = front; rear.next = new; front.prev = new</code>, then <code>front = new</code> — 5 writes'); this.snapFx(R);
+    R.done('Insert at 0', 'O(1)');
+  }
+  insertAt(R, v, i) {
+    if (this.full(R)) return;
+    if (i < 0 || i > this.n) { R.note(`Index ${i} is out of range 0…${this.n}.`); return; }
+    if (!this.head || i === this.n) { R.note(`Index ${i} = length → enqueue at the rear.`); return this.enqueue(R, v); }
+    if (i === 0) return this.insertFront(R, v);
+    R.note(`Traverse to index <b>${i - 1}</b>`);
+    const p = this.walk(R, i - 1);
+    const q = p.next;
+    const nd = this.stage(R, v, 0);
+    this.fx.dying.add(p.id + '>' + q.id); this.fx.dying.add(q.id + '>' + p.id);
+    R.note(`Cut both links <b>${esc(p.v)} ⇄ ${esc(q.v)}</b>`); this.snapFx(R);
+    nd.next = q; nd.prev = p; p.next = nd; q.prev = nd;
+    this.fx.fresh.add(p.id + '>' + nd.id); this.fx.fresh.add(nd.id + '>' + q.id);
+    this.fx.fresh.add(nd.id + '>' + p.id); this.fx.fresh.add(q.id + '>' + nd.id);
+    this.land(nd); this.n++;
+    R.tick(4); R.note('Wire 4 links <code>new.prev = before; new.next = after; before.next = new; after.prev = new</code>'); this.snapFx(R);
+    R.done(`Insert at ${i}`, 'O(n)');
+  }
+  search(R, v) { CircularQueue.prototype.search.call(this, R, v); }
+  clear(R) { CircularQueue.prototype.clear.call(this, R); }
+  generate(R) {
+    this.head = this.tail = null; this.n = 0; this.staged = null;
+    const k = 5 + Math.floor(Math.random() * 3);
+    R.note(`Building a doubly ring of ${k}…`);
+    for (let j = 0; j < k; j++) {
+      const nd = mkNode(randToken());
+      if (!this.head) { this.head = this.tail = nd; nd.next = nd; nd.prev = nd; }
+      else { nd.next = this.head; nd.prev = this.tail; this.tail.next = nd; this.head.prev = nd; this.tail = nd; }
+      this.n++; R.tick(); this.snapFx(R);
+    }
+    R.done('Generate', 'O(n)');
+  }
+  opDefs() {
+    return [
+      { id: 'enq', label: 'Enqueue', grp: 'add', val: 1, run: (R, v) => this.enqueue(R, v) },
+      { id: 'insAt', label: '+ At i', grp: 'add', val: 1, idx: 1, run: (R, v, i) => this.insertAt(R, v, i) },
+      { id: 'deq', label: 'Front', grp: 'del', danger: 1, run: R => this.dequeue(R) },
+      { id: 'delTail', label: 'Rear', grp: 'del', danger: 1, run: R => this.delTail(R) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+'use strict';
+/* ============ Hash table with separate chaining ============ */
+
+class HashTable extends Struct {
+  constructor() {
+    super();
+    this.B = 8;
+    this.buckets = Array.from({ length: this.B }, () => null); // chains of {id,v,next}
+    this.n = 0;
+  }
+  static label = 'Hash Table';
+  max = 24;
+  bigo() {
+    let longest = 0; for (let b = 0; b < this.B; b++) longest = Math.max(longest, this.chain(b).length);
+    return [['insert / search / delete', 'O(1) avg'], ['load', `${this.n} keys / ${this.B} buckets`], ['longest chain', `${longest} — worst lookup ≈ ${longest + 1} steps`]];
+  }
+  sizeInfo() { return `n = ${this.n} in ${this.B} buckets`; }
+  hash(v) { let s = 0; for (const ch of String(v)) s += ch.codePointAt(0); return s % this.B; }
+  hashText(v) {
+    const codes = [...String(v)].map(c => c.codePointAt(0));
+    return `hash(<b>${esc(v)}</b>) = (${codes.join(' + ')}) mod ${this.B} = <b>${this.hash(v)}</b>`;
+  }
+  chain(b) { const a = []; let c = this.buckets[b]; while (c) { a.push(c); c = c.next; } return a; }
+  scene() {
+    const ns = [], edges = [], frames = [];
+    const gapY = 56, gapX = 100, bx = -120;
+    for (let b = 0; b < this.B; b++) {
+      frames.push({ t: 'rect', x: bx, y: b * gapY - 18, w: 46, h: 36, label: String(b) });
+      this.chain(b).forEach((nd, j) => {
+        ns.push({ id: nd.id, v: nd.v, shape: 'rect', x: j * gapX, y: b * gapY, cls: this.nodeCls(nd.id) });
+        if (nd.next) edges.push({ from: nd.id, to: nd.next.id, cls: this.edgeCls(nd.id, nd.next.id) });
+      });
+    }
+    if (this.stagedNode) ns.push({ id: this.stagedNode.id, v: this.stagedNode.v, shape: 'rect', x: 260, y: -70, cls: this.nodeCls(this.stagedNode.id) });
+    for (const k of this.fx.dying) { const [f, t] = k.split('>'); if (!edges.some(e => e.from === f && e.to === t)) edges.push({ from: f, to: t, cls: 'dying' }); }
+    const sc = { nodes: ns, edges, ptrs: [], frames, ...sceneBounds(ns.concat([{ x: bx, y: -18 }, { x: bx + 46, y: (this.B - 1) * gapY + 18 }]), frames) };
+    sc.x0 -= 30; sc.w += 60; sc.y0 -= 55; sc.h += 75;
+    return sc;
+  }
+  insert(R, v) {
+    if (this.n >= this.max) { R.note(`Table is full for this demo (max ${this.max}).`); return; }
+    R.tick(); R.note(this.hashText(v));
+    this.stagedNode = { id: nid(), v, next: null };
+    this.snapFx(R);
+    const b = this.hash(v);
+    let c = this.buckets[b], last = null;
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (String(c.v) === String(v)) {
+        this.fx.hit.add(c.id); R.note(`<b>${esc(v)}</b> already lives in bucket ${b} — no duplicates.`);
+        this.stagedNode = null; this.snapFx(R); R.done('Insert', 'O(1) avg'); return;
+      }
+      last = c; c = c.next;
+    }
+    const nd = this.stagedNode; this.stagedNode = null;
+    if (last) { last.next = nd; this.fx.fresh.add(last.id + '>' + nd.id); }
+    else this.buckets[b] = nd;
+    this.n++;
+    R.tick();
+    R.note(last
+      ? `Bucket ${b} already has a chain — <b>collision!</b> Append to the end of the chain`
+      : `Bucket ${b} is empty — place <b>${esc(v)}</b> directly`);
+    this.fx.hit.add(nd.id);
+    this.snapFx(R);
+    R.done('Insert', 'O(1) avg');
+  }
+  search(R, v) {
+    R.tick(); R.note(this.hashText(v)); this.snapFx(R);
+    const b = this.hash(v);
+    let c = this.buckets[b];
+    if (!c) { R.note(`Bucket ${b} is empty — <b>${esc(v)}</b> is not in the table.`); R.done('Search', 'O(1) avg'); return; }
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (String(c.v) === String(v)) {
+        this.fx.hit.add(c.id); R.note(`Found <b>${esc(v)}</b> in bucket ${b} — one hash + short chain walk`); this.snapFx(R);
+        R.done('Search', 'O(1) avg'); return;
+      }
+      c = c.next;
+    }
+    R.note(`Walked bucket ${b}'s chain — <b>${esc(v)}</b> is not here.`); R.done('Search', 'O(1) avg');
+  }
+  delValue(R, v) {
+    R.tick(); R.note(this.hashText(v)); this.snapFx(R);
+    const b = this.hash(v);
+    let c = this.buckets[b], p = null;
+    while (c) {
+      R.cur(c.id); R.tick();
+      if (String(c.v) === String(v)) {
+        this.fx.doom.add(c.id);
+        if (p) this.fx.dying.add(p.id + '>' + c.id);
+        if (c.next) this.fx.dying.add(c.id + '>' + c.next.id);
+        R.note(`Unlink <b>${esc(v)}</b> from bucket ${b}'s chain`); this.snapFx(R);
+        if (p) { p.next = c.next; if (c.next) this.fx.fresh.add(p.id + '>' + c.next.id); }
+        else this.buckets[b] = c.next;
+        this.n--; R.tick(); this.snapFx(R);
+        R.done('Delete', 'O(1) avg'); return;
+      }
+      p = c; c = c.next;
+    }
+    R.note(`<b>${esc(v)}</b> is not in bucket ${b}.`); R.done('Delete', 'O(1) avg');
+  }
+  clear(R) {
+    if (!this.n) { R.note('Table is already empty.'); return; }
+    for (let b = 0; b < this.B; b++) for (const nd of this.chain(b)) this.fx.doom.add(nd.id);
+    R.tick(this.B); R.note(`Reset all ${this.B} buckets to <b>null</b> — one write each`); this.snapFx(R);
+    this.buckets = Array.from({ length: this.B }, () => null); this.n = 0;
+    this.snapFx(R);
+    R.done('Delete all', 'O(b)');
+  }
+  generate(R) {
+    this.buckets = Array.from({ length: this.B }, () => null); this.n = 0;
+    const k = 8 + Math.floor(Math.random() * 4);
+    R.note(`Hashing ${k} random keys…`);
+    const seen = new Set();
+    while (seen.size < k) seen.add(String(randToken()));
+    for (const v of seen) {
+      const b = this.hash(v);
+      const nd = { id: nid(), v, next: null };
+      if (!this.buckets[b]) this.buckets[b] = nd;
+      else { let e = this.buckets[b]; while (e.next) e = e.next; e.next = nd; }
+      this.n++;
+      R.tick(); this.snapFx(R);
+    }
+    R.done('Generate', 'O(n)');
+  }
+  opDefs() {
+    return [
+      { id: 'ins', label: 'Insert key', grp: 'add', val: 1, run: (R, v) => this.insert(R, v) },
+      { id: 'del', label: 'Key', grp: 'del', val: 1, danger: 1, run: (R, v) => this.delValue(R, v) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+'use strict';
+/* ============ Binary search tree + AVL ============ */
+
+function tNode(v) { return { id: nid(), v, l: null, r: null, h: 1 }; }
+
+class BST extends Struct {
+  constructor() { super(); this.root = null; this.n = 0; }
+  static label = 'BST';
+  max = 21;
+  showTag() { return ''; }
+  bigo() {
+    const h = this.heightEdges();
+    return [['search / insert / delete', `O(h) — h is ${h} now`], ['no balancing', `h can reach n−1 = ${Math.max(this.n - 1, 0)}`], ['balanced ideal', `⌈log₂(n+1)⌉−1 = ${Math.max(Math.ceil(Math.log2(this.n + 1)) - 1, 0)}`]];
+  }
+  height(nd = this.root) { if (!nd || nd === this.NIL) return 0; return 1 + Math.max(this.height(nd.l), this.height(nd.r)); }
+  heightEdges() { return Math.max(this.height() - 1, 0); }
+  sizeInfo() { return `n = ${this.n}, height = ${this.heightEdges()} edges`; }
+  scene() {
+    const ns = [], edges = [];
+    let ix = 0;
+    const place = (nd, depth) => {
+      if (!nd) return;
+      place(nd.l, depth + 1);
+      nd._x = ix++ * 54; nd._y = depth * 80;
+      place(nd.r, depth + 1);
+    };
+    place(this.root, 0);
+    const visit = nd => {
+      if (!nd) return;
+      ns.push({ id: nd.id, v: nd.v, shape: 'circ', x: nd._x, y: nd._y, cls: this.nodeCls(nd.id, this.colorCls(nd)), tag: this.showTag(nd) });
+      for (const ch of [nd.l, nd.r]) if (ch) edges.push({ from: nd.id, to: ch.id, shape: 'circ', cls: this.edgeCls(nd.id, ch.id) });
+      visit(nd.l); visit(nd.r);
+    };
+    visit(this.root);
+    const ptrs = this.root ? [{ name: 'root', at: this.root.id, side: 'n', shape: 'circ' }] : [];
+    const frames = ns.length ? [] : [{ t: 'text', x: 0, y: 40, label: 'empty tree — insert a value', w: 0, h: 0 }];
+    const sc = { nodes: ns, edges, ptrs, frames, ...sceneBounds(ns, frames) };
+    if (!ns.length) { sc.x0 = -200; sc.y0 = 0; sc.w = 400; sc.h = 100; }
+    sc.y0 -= 46; sc.h += 70; sc.x0 -= 30; sc.w += 60;
+    return sc;
+  }
+  colorCls() { return ''; }
+  full(R) { if (this.n >= this.max) { R.note(`Stage is full (max ${this.max} nodes).`); return true; } return false; }
+  insert(R, v) {
+    if (this.full(R)) return;
+    if (!this.root) {
+      this.root = tNode(v); this.n++;
+      R.tick(); R.note(`Tree is empty — <b>${esc(v)}</b> becomes the root`);
+      this.fx.hit.add(this.root.id); this.snapFx(R);
+      R.done('Insert', 'O(1)'); return;
+    }
+    let c = this.root, p = null, side = null;
+    while (c) {
+      R.cur(c.id); R.tick();
+      const d = cmp(v, c.v);
+      if (d === 0) {
+        this.fx.hit.add(c.id); R.note(`<b>${esc(v)}</b> is already in the tree — BST keeps values unique.`);
+        this.snapFx(R); R.done('Insert', 'O(h)'); return;
+      }
+      R.note(d < 0 ? `<b>${esc(v)}</b> &lt; <b>${esc(c.v)}</b> → go left` : `<b>${esc(v)}</b> &gt; <b>${esc(c.v)}</b> → go right`);
+      p = c; side = d < 0 ? 'l' : 'r'; c = c[side];
+    }
+    const nd = tNode(v);
+    p[side] = nd; this.n++;
+    this.fx.hit.add(nd.id); this.fx.fresh.add(p.id + '>' + nd.id);
+    R.tick(); R.note(`Attach <b>${esc(v)}</b> as ${side === 'l' ? 'left' : 'right'} child of <b>${esc(p.v)}</b>`);
+    this.snapFx(R);
+    R.done('Insert', 'O(h)');
+  }
+  search(R, v) {
+    let c = this.root;
+    if (!c) { R.note('Tree is empty.'); return; }
+    while (c) {
+      R.cur(c.id); R.tick();
+      const d = cmp(v, c.v);
+      if (d === 0) {
+        this.fx.hit.add(c.id); R.note(`Found <b>${esc(v)}</b> — one comparison per level`); this.snapFx(R);
+        R.done('Search', 'O(h)'); return;
+      }
+      R.note(d < 0 ? `<b>${esc(v)}</b> &lt; <b>${esc(c.v)}</b> → left` : `<b>${esc(v)}</b> &gt; <b>${esc(c.v)}</b> → right`);
+      c = d < 0 ? c.l : c.r;
+    }
+    R.note(`Hit a null branch — <b>${esc(v)}</b> is not in the tree.`);
+    R.done('Search', 'O(h)');
+  }
+  delValue(R, v) {
+    let c = this.root, p = null;
+    while (c && cmp(v, c.v) !== 0) {
+      R.cur(c.id); R.tick();
+      p = c; c = cmp(v, c.v) < 0 ? c.l : c.r;
+    }
+    if (!c) { R.note(`<b>${esc(v)}</b> is not in the tree.`); R.done('Delete', 'O(h)'); return; }
+    R.cur(c.id); R.tick();
+    if (c.l && c.r) {
+      this.fx.hl.add(c.id);
+      R.note(`<b>${esc(v)}</b> has two children → find its <b>in-order successor</b> (smallest in right subtree)`);
+      this.snapFx(R);
+      let sp = c, s = c.r;
+      R.cur(s.id); R.tick();
+      while (s.l) { sp = s; s = s.l; R.cur(s.id); R.tick(); }
+      this.fx.hit.add(s.id);
+      R.note(`Successor is <b>${esc(s.v)}</b> — copy its value into <b>${esc(c.v)}</b>`); this.snapFx(R);
+      c.v = s.v;
+      this.fx.hit.add(c.id); this.snapFx(R);
+      p = sp; c = s;
+      R.note(`Now delete the successor node (it has at most one child)`);
+    }
+    const child = c.l || c.r;
+    this.fx.doom.add(c.id);
+    if (p) this.fx.dying.add(p.id + '>' + c.id);
+    if (child) this.fx.dying.add(c.id + '>' + child.id);
+    R.note(child
+      ? (p ? `Splice out — its child is adopted by the parent` : `Splice out the root — its child becomes the new root`)
+      : `Leaf node — simply remove it`);
+    this.snapFx(R);
+    if (!p) this.root = child;
+    else if (p.l === c) p.l = child; else p.r = child;
+    if (p && child) this.fx.fresh.add(p.id + '>' + child.id);
+    this.n--;
+    R.tick(); this.snapFx(R);
+    R.done('Delete', 'O(h)');
+  }
+  clear(R) {
+    if (!this.root) { R.note('Already empty.'); return; }
+    const mark = nd => { if (nd) { this.fx.doom.add(nd.id); mark(nd.l); mark(nd.r); } };
+    mark(this.root);
+    R.tick(); R.note('Drop the <b>root</b> reference — the whole tree is garbage-collected'); this.snapFx(R);
+    this.root = null; this.n = 0; this.snapFx(R);
+    R.done('Delete all', 'O(1)');
+  }
+  genValues(k) {
+    const out = new Set();
+    while (out.size < k) out.add(randToken());
+    return [...out];
+  }
+  quickInsert(v) { // silent build for generate
+    if (!this.root) { this.root = tNode(v); this.n++; return; }
+    let c = this.root;
+    for (;;) {
+      const d = cmp(v, c.v);
+      if (d === 0) return;
+      const side = d < 0 ? 'l' : 'r';
+      if (!c[side]) { c[side] = tNode(v); this.n++; return; }
+      c = c[side];
+    }
+  }
+  generate(R) {
+    this.root = null; this.n = 0;
+    const vals = this.genValues(7 + Math.floor(Math.random() * 3));
+    R.note(`Inserting ${vals.length} random values…`);
+    for (const v of vals) { this.quickInsert(v); R.tick(); this.snapFx(R); }
+    R.done('Generate', 'O(n log n)');
+  }
+  opDefs() {
+    return [
+      { id: 'ins', label: '+ Insert', grp: 'add', val: 1, run: (R, v) => this.insert(R, v) },
+      { id: 'del', label: 'Value', grp: 'del', val: 1, danger: 1, run: (R, v) => this.delValue(R, v) },
+      { id: 'clear', label: 'All', grp: 'del', danger: 1, run: R => this.clear(R) },
+      { id: 'search', label: 'Search', grp: 'etc', val: 1, run: (R, v) => this.search(R, v) },
+      { id: 'gen', label: '🎲 Generate', grp: 'data', run: R => this.generate(R) },
+    ];
+  }
+}
+
+/* ---------------- AVL (self-balancing BST) ---------------- */
+class AVL extends BST {
+  static label = 'AVL Tree';
+  bigo() {
+    const h = this.heightEdges();
+    return [['search / insert / delete', `O(log n) — h is ${h} for n = ${this.n}`], ['ideal', `⌈log₂(n+1)⌉−1 = ${Math.max(Math.ceil(Math.log2(this.n + 1)) - 1, 0)}`], ['rotations', 'O(1) each']];
+  }
+  showTag(nd) { const b = this.bf(nd); return 'bf ' + (b > 0 ? '+' + b : b); }
+  h(nd) { return nd ? nd.h : 0; }
+  // W3Schools convention: BF = height(right) − height(left); positive = right-heavy
+  bf(nd) { return this.h(nd.r) - this.h(nd.l); }
+  upd(nd) { nd.h = 1 + Math.max(this.h(nd.l), this.h(nd.r)); }
+  rotR(R, y) {
+    const x = y.l;
+    R.note(`<b>Right rotation</b> at <b>${esc(y.v)}</b> — its left child <b>${esc(x.v)}</b> becomes the subtree root`);
+    y.l = x.r; x.r = y;
+    this.upd(y); this.upd(x);
+    return x;
+  }
+  rotL(R, x) {
+    const y = x.r;
+    R.note(`<b>Left rotation</b> at <b>${esc(x.v)}</b> — its right child <b>${esc(y.v)}</b> becomes the subtree root`);
+    x.r = y.l; y.l = x;
+    this.upd(x); this.upd(y);
+    return y;
+  }
+  rebalance(R, nd) {
+    this.upd(nd);
+    const b = this.bf(nd);
+    if (b < -1) {
+      this.fx.hl.add(nd.id);
+      R.tick(); R.note(`<b>${esc(nd.v)}</b> is unbalanced: bf = ${b} (left-heavy)`); this.snapFx(R, { slow: 1 });
+      if (this.bf(nd.l) > 0) {
+        R.tick(); nd.l = this.rotL(R, nd.l); this.snapFx(R, { slow: 1 }); // LR case
+      }
+      R.tick(); const r = this.rotR(R, nd); this.snapFx(R, { slow: 1 });
+      return r;
+    }
+    if (b > 1) {
+      this.fx.hl.add(nd.id);
+      R.tick(); R.note(`<b>${esc(nd.v)}</b> is unbalanced: bf = +${b} (right-heavy)`); this.snapFx(R, { slow: 1 });
+      if (this.bf(nd.r) < 0) {
+        R.tick(); nd.r = this.rotR(R, nd.r); this.snapFx(R, { slow: 1 }); // RL case
+      }
+      R.tick(); const r = this.rotL(R, nd); this.snapFx(R, { slow: 1 });
+      return r;
+    }
+    return nd;
+  }
+  insRec(R, nd, v, out) {
+    if (!nd) {
+      const fresh = tNode(v); this.n++; out.node = fresh;
+      return fresh;
+    }
+    R.cur(nd.id); R.tick();
+    const d = cmp(v, nd.v);
+    if (d === 0) { out.dup = nd; return nd; }
+    R.note(d < 0 ? `<b>${esc(v)}</b> &lt; <b>${esc(nd.v)}</b> → left` : `<b>${esc(v)}</b> &gt; <b>${esc(nd.v)}</b> → right`);
+    if (d < 0) nd.l = this.insRec(R, nd.l, v, out);
+    else nd.r = this.insRec(R, nd.r, v, out);
+    if (out.dup) return nd;
+    return this.rebalance(R, nd);
+  }
+  insert(R, v) {
+    if (this.full(R)) return;
+    const out = {};
+    this.root = this.insRec(R, this.root, v, out);
+    if (out.dup) {
+      this.fx.hit.add(out.dup.id); R.note(`<b>${esc(v)}</b> is already here — no duplicates.`); this.snapFx(R);
+    } else {
+      this.fx.hit.add(out.node.id);
+      R.tick(); R.note(`Attached <b>${esc(v)}</b>; heights updated on the way back up`); this.snapFx(R);
+    }
+    R.done('Insert', 'O(log n)');
+  }
+  minNode(nd) { while (nd.l) nd = nd.l; return nd; }
+  delRec(R, nd, v, out) {
+    if (!nd) { out.missing = true; return null; }
+    R.cur(nd.id); R.tick();
+    const d = cmp(v, nd.v);
+    if (d < 0) nd.l = this.delRec(R, nd.l, v, out);
+    else if (d > 0) nd.r = this.delRec(R, nd.r, v, out);
+    else {
+      out.found = true;
+      if (nd.l && nd.r) {
+        this.fx.hl.add(nd.id);
+        R.note(`Two children → replace with in-order successor`); this.snapFx(R);
+        const s = this.minNode(nd.r);
+        this.fx.hit.add(s.id); R.note(`Successor: <b>${esc(s.v)}</b>`); this.snapFx(R);
+        nd.v = s.v;
+        nd.r = this.delRec(R, nd.r, s.v, { quiet: true });
+      } else {
+        const child = nd.l || nd.r;
+        this.fx.doom.add(nd.id);
+        R.note(child ? `One child — splice out <b>${esc(nd.v)}</b>` : `Leaf — remove <b>${esc(nd.v)}</b>`);
+        this.snapFx(R);
+        this.n--; R.tick();
+        return child;
+      }
+    }
+    if (out.missing) return nd;
+    return this.rebalance(R, nd);
+  }
+  delValue(R, v) {
+    if (!this.root) { R.note('Tree is empty.'); return; }
+    const out = {};
+    this.root = this.delRec(R, this.root, v, out);
+    if (out.missing) R.note(`<b>${esc(v)}</b> is not in the tree.`);
+    else { this.snapFx(R); }
+    R.done('Delete', 'O(log n)');
+  }
+  quickInsert(v) {
+    const rec = (nd) => {
+      if (!nd) { this.n++; return tNode(v); }
+      const d = cmp(v, nd.v);
+      if (d === 0) return nd;
+      if (d < 0) nd.l = rec(nd.l); else nd.r = rec(nd.r);
+      this.upd(nd);
+      const b = this.bf(nd);
+      if (b < -1) { if (this.bf(nd.l) > 0) nd.l = this.qRotL(nd.l); return this.qRotR(nd); }
+      if (b > 1) { if (this.bf(nd.r) < 0) nd.r = this.qRotR(nd.r); return this.qRotL(nd); }
+      return nd;
+    };
+    this.root = rec(this.root);
+  }
+  qRotR(y) { const x = y.l; y.l = x.r; x.r = y; this.upd(y); this.upd(x); return x; }
+  qRotL(x) { const y = x.r; x.r = y.l; y.l = x; this.upd(x); this.upd(y); return y; }
+}
+
+'use strict';
+/* ============ Red-black tree (CLRS, NIL sentinel) ============ */
+
+class RBTree extends BST {
+  constructor() {
+    super();
+    this.NIL = { id: 'NIL', v: '', c: 'B', l: null, r: null, p: null };
+    this.NIL.l = this.NIL.r = this.NIL.p = this.NIL;
+    this.root = this.NIL;
+  }
+  static label = 'Red-Black';
+  bigo() {
+    const h = this.heightEdges();
+    return [['search / insert / delete', `O(log n) — h is ${h} for n = ${this.n}`], ['red-black bound', `h ≤ 2·log₂(n+1) = ${(2 * Math.log2(this.n + 1)).toFixed(1)}`]];
+  }
+  colorCls(nd) { return nd.c === 'R' ? 'rb-r' : 'rb-b'; }
+  showTag() { return ''; }
+  scene() {
+    const ns = [], edges = [];
+    let ix = 0;
+    const place = nd => {
+      if (nd === this.NIL) return;
+      place(nd.l);
+      nd._x = ix++ * 54; nd._y = this.depth(nd) * 80;
+      place(nd.r);
+    };
+    place(this.root);
+    const visit = nd => {
+      if (nd === this.NIL) return;
+      ns.push({ id: nd.id, v: nd.v, shape: 'circ', x: nd._x, y: nd._y, cls: this.nodeCls(nd.id, this.colorCls(nd)) });
+      for (const ch of [nd.l, nd.r]) if (ch !== this.NIL) edges.push({ from: nd.id, to: ch.id, shape: 'circ', cls: this.edgeCls(nd.id, ch.id) });
+      visit(nd.l); visit(nd.r);
+    };
+    visit(this.root);
+    const ptrs = this.root !== this.NIL ? [{ name: 'root', at: this.root.id, side: 'n', shape: 'circ' }] : [];
+    const frames = ns.length ? [] : [{ t: 'text', x: 0, y: 40, label: 'empty tree — insert a value', w: 0, h: 0 }];
+    const sc = { nodes: ns, edges, ptrs, frames, ...sceneBounds(ns, frames) };
+    if (!ns.length) { sc.x0 = -200; sc.y0 = 0; sc.w = 400; sc.h = 100; }
+    sc.y0 -= 46; sc.h += 70; sc.x0 -= 30; sc.w += 60;
+    return sc;
+  }
+  depth(nd) { let d = 0, c = nd; while (c.p !== this.NIL && c.p) { d++; c = c.p; } return d; }
+  rotL(R, x, quiet) {
+    const y = x.r;
+    if (!quiet) R.note(`<b>Left rotation</b> at <b>${esc(x.v)}</b>`);
+    x.r = y.l; if (y.l !== this.NIL) y.l.p = x;
+    y.p = x.p;
+    if (x.p === this.NIL) this.root = y;
+    else if (x === x.p.l) x.p.l = y; else x.p.r = y;
+    y.l = x; x.p = y;
+  }
+  rotR(R, x, quiet) {
+    const y = x.l;
+    if (!quiet) R.note(`<b>Right rotation</b> at <b>${esc(x.v)}</b>`);
+    x.l = y.r; if (y.r !== this.NIL) y.r.p = x;
+    y.p = x.p;
+    if (x.p === this.NIL) this.root = y;
+    else if (x === x.p.r) x.p.r = y; else x.p.l = y;
+    y.r = x; x.p = y;
+  }
+  insert(R, v) {
+    if (this.full(R)) return;
+    let y = this.NIL, x = this.root;
+    while (x !== this.NIL) {
+      R.cur(x.id); R.tick();
+      const d = cmp(v, x.v);
+      if (d === 0) {
+        this.fx.hit.add(x.id); R.note(`<b>${esc(v)}</b> is already in the tree.`); this.snapFx(R);
+        R.done('Insert', 'O(log n)'); return;
+      }
+      R.note(d < 0 ? `<b>${esc(v)}</b> &lt; <b>${esc(x.v)}</b> → left` : `<b>${esc(v)}</b> &gt; <b>${esc(x.v)}</b> → right`);
+      y = x; x = d < 0 ? x.l : x.r;
+    }
+    const z = { id: nid(), v, c: 'R', l: this.NIL, r: this.NIL, p: y };
+    if (y === this.NIL) this.root = z;
+    else if (cmp(v, y.v) < 0) y.l = z; else y.r = z;
+    this.n++;
+    this.fx.hit.add(z.id);
+    if (y !== this.NIL) this.fx.fresh.add(y.id + '>' + z.id);
+    R.tick(); R.note(`Attach <b>${esc(v)}</b> as a <b>red</b> node (red never changes black-height)`);
+    this.snapFx(R);
+    this.insFix(R, z);
+    R.done('Insert', 'O(log n)');
+  }
+  insFix(R, z) {
+    while (z.p.c === 'R') {
+      R.tick();
+      const gp = z.p.p;
+      if (z.p === gp.l) {
+        const u = gp.r;
+        if (u.c === 'R') {
+          this.fx.hl.add(z.p.id); this.fx.hl.add(u.id);
+          R.note(`Red parent <b>${esc(z.p.v)}</b> and red uncle <b>${esc(u.v)}</b> → <b>recolor</b> both black, grandparent red`);
+          z.p.c = 'B'; u.c = 'B'; gp.c = 'R';
+          this.snapFx(R, { slow: 1 });
+          z = gp;
+        } else {
+          if (z === z.p.r) {
+            R.note(`Uncle is black, <b>${esc(z.v)}</b> is an inner child (triangle) → rotate parent first`);
+            z = z.p; this.rotL(R, z, true); this.snapFx(R, { slow: 1 });
+          }
+          z.p.c = 'B'; gp.c = 'R';
+          R.note(`Line case: recolor, then <b>right-rotate</b> grandparent <b>${esc(gp.v)}</b>`);
+          this.rotR(R, gp, true);
+          this.snapFx(R, { slow: 1 });
+        }
+      } else {
+        const u = gp.l;
+        if (u.c === 'R') {
+          this.fx.hl.add(z.p.id); this.fx.hl.add(u.id);
+          R.note(`Red parent <b>${esc(z.p.v)}</b> and red uncle <b>${esc(u.v)}</b> → <b>recolor</b>`);
+          z.p.c = 'B'; u.c = 'B'; gp.c = 'R';
+          this.snapFx(R, { slow: 1 });
+          z = gp;
+        } else {
+          if (z === z.p.l) {
+            R.note(`Uncle is black, triangle case → rotate parent first`);
+            z = z.p; this.rotR(R, z, true); this.snapFx(R, { slow: 1 });
+          }
+          z.p.c = 'B'; gp.c = 'R';
+          R.note(`Line case: recolor, then <b>left-rotate</b> grandparent <b>${esc(gp.v)}</b>`);
+          this.rotL(R, gp, true);
+          this.snapFx(R, { slow: 1 });
+        }
+      }
+    }
+    if (this.root.c !== 'B') {
+      this.root.c = 'B';
+      R.tick(); R.note('Rule: the <b>root is always black</b>'); this.snapFx(R);
+    }
+  }
+  transplant(u, vv) {
+    if (u.p === this.NIL) this.root = vv;
+    else if (u === u.p.l) u.p.l = vv; else u.p.r = vv;
+    vv.p = u.p;
+  }
+  minN(nd) { while (nd.l !== this.NIL) nd = nd.l; return nd; }
+  delValue(R, v) {
+    let z = this.root;
+    if (z === this.NIL) { R.note('Tree is empty.'); return; }
+    while (z !== this.NIL && cmp(v, z.v) !== 0) {
+      R.cur(z.id); R.tick();
+      z = cmp(v, z.v) < 0 ? z.l : z.r;
+    }
+    if (z === this.NIL) { R.note(`<b>${esc(v)}</b> is not in the tree.`); R.done('Delete', 'O(log n)'); return; }
+    R.cur(z.id); R.tick();
+    this.fx.doom.add(z.id);
+    R.note(`Found <b>${esc(v)}</b> — remove it, then repair the red-black rules`);
+    this.snapFx(R);
+    let y = z, yc = y.c, x;
+    if (z.l === this.NIL) { x = z.r; this.transplant(z, z.r); }
+    else if (z.r === this.NIL) { x = z.l; this.transplant(z, z.l); }
+    else {
+      y = this.minN(z.r); yc = y.c; x = y.r;
+      this.fx.hit.add(y.id);
+      R.note(`Two children → in-order successor <b>${esc(y.v)}</b> takes its place`);
+      this.snapFx(R);
+      if (y.p === z) { x.p = y; }
+      else { this.transplant(y, y.r); y.r = z.r; y.r.p = y; }
+      this.transplant(z, y);
+      y.l = z.l; y.l.p = y; y.c = z.c;
+    }
+    this.n--;
+    R.tick(); this.snapFx(R);
+    if (yc === 'B') {
+      R.note(`A <b>black</b> node was removed — black-height is broken, fix up`);
+      this.delFix(R, x);
+    } else {
+      R.note(`A <b>red</b> node was removed — no rules broken`);
+    }
+    this.snapFx(R);
+    R.done('Delete', 'O(log n)');
+  }
+  delFix(R, x) {
+    while (x !== this.root && x.c === 'B') {
+      R.tick();
+      if (x === x.p.l) {
+        let w = x.p.r;
+        if (w.c === 'R') {
+          R.note(`Sibling <b>${esc(w.v)}</b> is red → recolor + left-rotate parent`);
+          w.c = 'B'; x.p.c = 'R'; this.rotL(R, x.p, true); this.snapFx(R, { slow: 1 });
+          w = x.p.r;
+        }
+        if (w.l.c === 'B' && w.r.c === 'B') {
+          if (w !== this.NIL) { this.fx.hl.add(w.id); R.note(`Sibling's children are black → recolor sibling red, move the problem up`); }
+          w.c = 'R'; this.snapFx(R, { slow: 1 });
+          x = x.p;
+        } else {
+          if (w.r.c === 'B') {
+            R.note(`Sibling's far child is black → rotate sibling right`);
+            w.l.c = 'B'; w.c = 'R'; this.rotR(R, w, true); this.snapFx(R, { slow: 1 });
+            w = x.p.r;
+          }
+          R.note(`Far child is red → final recolor + left-rotate parent`);
+          w.c = x.p.c; x.p.c = 'B'; w.r.c = 'B';
+          this.rotL(R, x.p, true); this.snapFx(R, { slow: 1 });
+          x = this.root;
+        }
+      } else {
+        let w = x.p.l;
+        if (w.c === 'R') {
+          R.note(`Sibling <b>${esc(w.v)}</b> is red → recolor + right-rotate parent`);
+          w.c = 'B'; x.p.c = 'R'; this.rotR(R, x.p, true); this.snapFx(R, { slow: 1 });
+          w = x.p.l;
+        }
+        if (w.r.c === 'B' && w.l.c === 'B') {
+          if (w !== this.NIL) { this.fx.hl.add(w.id); R.note(`Sibling's children are black → recolor sibling red, move up`); }
+          w.c = 'R'; this.snapFx(R, { slow: 1 });
+          x = x.p;
+        } else {
+          if (w.l.c === 'B') {
+            R.note(`Mirror case → rotate sibling left`);
+            w.r.c = 'B'; w.c = 'R'; this.rotL(R, w, true); this.snapFx(R, { slow: 1 });
+            w = x.p.l;
+          }
+          R.note(`Final recolor + right-rotate parent`);
+          w.c = x.p.c; x.p.c = 'B'; w.l.c = 'B';
+          this.rotR(R, x.p, true); this.snapFx(R, { slow: 1 });
+          x = this.root;
+        }
+      }
+    }
+    if (x.c !== 'B') { x.c = 'B'; this.snapFx(R); }
+    this.NIL.c = 'B'; this.NIL.p = this.NIL; // keep sentinel pristine
+  }
+  search(R, v) {
+    let c = this.root;
+    if (c === this.NIL) { R.note('Tree is empty.'); return; }
+    while (c !== this.NIL) {
+      R.cur(c.id); R.tick();
+      const d = cmp(v, c.v);
+      if (d === 0) {
+        this.fx.hit.add(c.id); R.note(`Found <b>${esc(v)}</b>`); this.snapFx(R);
+        R.done('Search', 'O(log n)'); return;
+      }
+      R.note(d < 0 ? `<b>${esc(v)}</b> &lt; <b>${esc(c.v)}</b> → left` : `<b>${esc(v)}</b> &gt; <b>${esc(c.v)}</b> → right`);
+      c = d < 0 ? c.l : c.r;
+    }
+    R.note(`<b>${esc(v)}</b> is not in the tree.`);
+    R.done('Search', 'O(log n)');
+  }
+  clear(R) {
+    if (this.root === this.NIL) { R.note('Already empty.'); return; }
+    const mark = nd => { if (nd !== this.NIL) { this.fx.doom.add(nd.id); mark(nd.l); mark(nd.r); } };
+    mark(this.root);
+    R.tick(); R.note('Drop the <b>root</b> reference'); this.snapFx(R);
+    this.root = this.NIL; this.n = 0; this.snapFx(R);
+    R.done('Delete all', 'O(1)');
+  }
+  quickInsert(v) {
+    let y = this.NIL, x = this.root;
+    while (x !== this.NIL) {
+      const d = cmp(v, x.v);
+      if (d === 0) return;
+      y = x; x = d < 0 ? x.l : x.r;
+    }
+    const z = { id: nid(), v, c: 'R', l: this.NIL, r: this.NIL, p: y };
+    if (y === this.NIL) this.root = z;
+    else if (cmp(v, y.v) < 0) y.l = z; else y.r = z;
+    this.n++;
+    // silent fixup
+    let zz = z;
+    while (zz.p.c === 'R') {
+      const gp = zz.p.p;
+      if (zz.p === gp.l) {
+        const u = gp.r;
+        if (u.c === 'R') { zz.p.c = 'B'; u.c = 'B'; gp.c = 'R'; zz = gp; }
+        else {
+          if (zz === zz.p.r) { zz = zz.p; this.rotL(null, zz, true); }
+          zz.p.c = 'B'; gp.c = 'R'; this.rotR(null, gp, true);
+        }
+      } else {
+        const u = gp.l;
+        if (u.c === 'R') { zz.p.c = 'B'; u.c = 'B'; gp.c = 'R'; zz = gp; }
+        else {
+          if (zz === zz.p.l) { zz = zz.p; this.rotR(null, zz, true); }
+          zz.p.c = 'B'; gp.c = 'R'; this.rotL(null, gp, true);
+        }
+      }
+    }
+    this.root.c = 'B';
+  }
+  generate(R) {
+    this.root = this.NIL; this.n = 0;
+    const vals = this.genValues(8 + Math.floor(Math.random() * 3));
+    R.note(`Inserting ${vals.length} random values with silent fix-ups…`);
+    for (const v of vals) { this.quickInsert(v); R.tick(); this.snapFx(R); }
+    R.done('Generate', 'O(n log n)');
+  }
+}
+
+'use strict';
+/* ============ App: registry, tabs, controls ============ */
+
+const REGISTRY = [
+  ['sll', SinglyList], ['dll', DoublyList], ['stack', StackLIFO], ['queue', QueueFIFO],
+  ['cq', CircularQueue], ['cdq', CircularDoubly], ['hash', HashTable],
+  ['bst', BST], ['avl', AVL], ['rb', RBTree],
+];
+const instances = new Map();
+let active = null, renderer, player;
+
+function setOpsEnabled(on) {
+  document.querySelectorAll('#ops button, #tabs button, #finish').forEach(b => {
+    if (b.id === 'finish') { b.disabled = on; return; }   // finish only enabled while playing
+    b.disabled = !on || b.dataset.hardOff === '1';
+  });
+}
+
+function getStruct(key) {
+  if (!instances.has(key)) {
+    const Cls = REGISTRY.find(r => r[0] === key)[1];
+    const s = new Cls();
+    const seedR = new Rec();     // seed with a small dataset, applied instantly
+    s.generate(seedR);
+    s.clearFx();
+    instances.set(key, s);
+  }
+  return instances.get(key);
+}
+
+const GRP_LABELS = { add: 'ADD', del: 'DELETE', etc: 'MORE', data: 'DATA' };
+
+function renderOps(s) {
+  const wrap = $('#ops');
+  wrap.innerHTML = '';
+  const groups = new Map();
+  for (const op of s.opDefs()) {
+    if (!groups.has(op.grp)) groups.set(op.grp, []);
+    groups.get(op.grp).push(op);
+  }
+  for (const [g, ops] of groups) {
+    const div = document.createElement('div');
+    div.className = 'opgrp';
+    div.dataset.grp = g;
+    const lab = document.createElement('span');
+    lab.className = 'glabel'; lab.textContent = GRP_LABELS[g] || '';
+    div.appendChild(lab);
+    for (const op of ops) {
+      const b = document.createElement('button');
+      b.textContent = op.label;
+      if (op.danger) b.className = 'danger';
+      b.addEventListener('click', () => runOp(op));
+      div.appendChild(b);
+    }
+    wrap.appendChild(div);
+  }
+}
+
+function renderChips(s) {
+  $('#bigo').innerHTML = s.bigo().map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join('');
+}
+
+function runOp(op) {
+  if (player.busy) return;
+  const s = active;
+  let v = $('#val').value.trim();
+  if (op.val && !v) { v = randToken(); $('#val').value = v; }
+  v = v.slice(0, 4);
+  let i = parseInt($('#idx').value, 10);
+  if (isNaN(i) || i < 0) i = 0;
+  const R = new Rec();
+  s.clearFx();
+  s.staged = null; s.stagedNode = null;
+  // pre-op snapshot: structuredClone preserves the pointer graph (incl. cycles & sentinels)
+  const FIELDS = ['head', 'tail', 'root', 'NIL', 'buckets', 'n', 'staged', 'stagedNode'];
+  const snap = {};
+  for (const f of FIELDS) if (f in s) snap[f] = s[f];
+  const backup = structuredClone(snap);
+  try {
+    op.run(R, v, i);
+  } catch (err) {
+    console.error(err);
+    Object.assign(s, backup);
+    s.clearFx();
+    R.steps.length = 0;
+    R.note('That operation hit an internal error — the structure was rolled back, nothing changed.');
+  }
+  R.steps.push({ t: 'scene', scene: s.scene(), count: R.count }); // guaranteed final sync frame
+  player.play(R.steps, s.sizeInfo()).then(() => renderChips(s));  // chips pick up live n / h / load
+}
+
+function selectTab(key) {
+  if (player.busy) return;
+  active = getStruct(key);
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.key === key));
+  renderOps(active);
+  renderChips(active);
+  renderer.setCur(null);
+  renderer.applyScene(active.scene(), true);
+  $('#msg').textContent = REGISTRY.find(r => r[0] === key)[1].label + ' — ready.';
+  $('#count').textContent = 'steps: 0';
+}
+
+function init() {
+  renderer = new Renderer($('#svg'));
+  player = new Player(renderer);
+  const tabs = $('#tabs');
+  for (const [key, Cls] of REGISTRY) {
+    const b = document.createElement('button');
+    b.textContent = Cls.label; b.dataset.key = key;
+    b.addEventListener('click', () => selectTab(key));
+    tabs.appendChild(b);
+  }
+  $('#finish').addEventListener('click', () => { player.skip = true; });
+  $('#finish').disabled = true;
+  if (window.innerWidth >= 1100) document.body.classList.add('logopen');
+  $('#logbtn').addEventListener('click', () => document.body.classList.toggle('logopen'));
+  $('#logx').addEventListener('click', () => document.body.classList.remove('logopen'));
+  $('#val').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !player.busy) {
+      const first = active.opDefs().find(o => o.grp === 'add');
+      if (first) runOp(first);
+    }
+  });
+  selectTab('sll');
+}
+init();
+
+</script>
