@@ -1,12 +1,12 @@
-# Data Structure Studio
+# Data Structures Studio
 
-[![tests](https://github.com/bgard68/Data-Structure-Studio/actions/workflows/test.yml/badge.svg)](https://github.com/bgard68/Data-Structure-Studio/actions/workflows/test.yml)
+[![tests](https://github.com/bgard68/Data-Structures-Studio/actions/workflows/test.yml/badge.svg)](https://github.com/bgard68/Data-Structures-Studio/actions/workflows/test.yml)
 
 A one-screen, animated data-structure lab for students. Every operation animates **exactly** what the algorithm does — pointer by pointer, link by link — with a live step counter tied to Big-O.
 
-**▶ Try it: [bgard68.github.io/Data-Structure-Studio](https://bgard68.github.io/Data-Structure-Studio/)**
+**▶ Try it: [bgard68.github.io/Data-Structures-Studio](https://bgard68.github.io/Data-Structures-Studio/)**
 
-[![Data Structure Studio — an AVL tree after inserting 25, with the operation log and live Big-O chips](docs/screenshot.svg)](https://bgard68.github.io/Data-Structure-Studio/)
+[![Data Structures Studio — an AVL tree after inserting 25, with the operation log and live Big-O chips](docs/screenshot.svg)](https://bgard68.github.io/Data-Structures-Studio/)
 
 Built following the [W3Schools DSA tutorial](https://www.w3schools.com/dsa/dsa_intro.php) conventions.
 
@@ -16,7 +16,7 @@ Built following the [W3Schools DSA tutorial](https://www.w3schools.com/dsa/dsa_i
 
 No install, no build, no server:
 
-- Open the [live site](https://bgard68.github.io/Data-Structure-Studio/), **or**
+- Open the [live site](https://bgard68.github.io/Data-Structures-Studio/), **or**
 - Download `preview.html` and double-click it (fully offline), **or**
 - Serve this folder with any static server.
 

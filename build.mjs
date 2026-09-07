@@ -16,7 +16,7 @@ writeFileSync(join(root, 'app.html'), body);
 
 // local preview: full document, with the title moved into <head> where it belongs
 const titleMatch = body.match(/<title>.*?<\/title>/);
-const title = titleMatch ? titleMatch[0] : '<title>Data Structure Studio</title>';
+const title = titleMatch ? titleMatch[0] : '<title>Data Structures Studio</title>';
 // two linked nodes on the app's dark ground, drawn small enough to read at 16px
 const favicon = '<link rel="icon" href="data:image/svg+xml,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
